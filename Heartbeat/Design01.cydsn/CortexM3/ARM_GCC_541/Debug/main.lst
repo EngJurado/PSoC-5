@@ -1,0 +1,2244 @@
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"main.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.Ms,"ax",%progbits
+  20              		.align	2
+  21              		.global	Ms
+  22              		.thumb
+  23              		.thumb_func
+  24              		.type	Ms, %function
+  25              	Ms:
+  26              	.LFB64:
+  27              		.file 1 "main.c"
+   1:main.c        **** /* ========================================
+   2:main.c        ****  *
+   3:main.c        ****  * Copyright YOUR COMPANY, THE YEAR
+   4:main.c        ****  * All Rights Reserved
+   5:main.c        ****  * UNPUBLISHED, LICENSED SOFTWARE.
+   6:main.c        ****  *
+   7:main.c        ****  * CONFIDENTIAL AND PROPRIETARY INFORMATION
+   8:main.c        ****  * WHICH IS THE PROPERTY OF your company.
+   9:main.c        ****  *
+  10:main.c        ****  * ========================================
+  11:main.c        **** */
+  12:main.c        **** #include "project.h"
+  13:main.c        **** 
+  14:main.c        **** struct Pulso{
+  15:main.c        ****     uint8 dato1;
+  16:main.c        ****     uint8 dato2;
+  17:main.c        ****     uint8 dato3;
+  18:main.c        ****     uint8 dato4;
+  19:main.c        ****     uint8 dato5;
+  20:main.c        ****     uint8 datoActual;
+  21:main.c        ****     uint8 promedioMovil;
+  22:main.c        ****     uint8 bandera;
+  23:main.c        ****     uint8 dedo;
+  24:main.c        **** };
+  25:main.c        **** 
+  26:main.c        **** struct Pulso pulso;
+  27:main.c        **** 
+  28:main.c        **** struct Tiempo{
+  29:main.c        ****     uint8 bandera;
+  30:main.c        ****     uint16 ms;
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 2
+
+
+  31:main.c        ****     uint8 ms10;
+  32:main.c        ****     uint8 ms100;
+  33:main.c        **** };
+  34:main.c        **** 
+  35:main.c        **** struct Tiempo tiempo;
+  36:main.c        **** 
+  37:main.c        **** struct Voltaje{
+  38:main.c        ****     uint16 ADC;
+  39:main.c        ****     uint16 mv;
+  40:main.c        ****     uint16 dato1;
+  41:main.c        ****     uint16 dato2;
+  42:main.c        ****     uint16 dato3;
+  43:main.c        ****     uint16 dato4;
+  44:main.c        ****     uint16 dato5;
+  45:main.c        ****     uint16 promedioMovil;
+  46:main.c        **** };
+  47:main.c        **** 
+  48:main.c        **** struct Voltaje voltaje;
+  49:main.c        **** 
+  50:main.c        **** CY_ISR_PROTO(Serial);
+  51:main.c        **** CY_ISR_PROTO(Ms);
+  52:main.c        **** CY_ISR_PROTO(Medicion);
+  53:main.c        ****     
+  54:main.c        **** int main(void)
+  55:main.c        **** {
+  56:main.c        ****     CyGlobalIntEnable; /* Enable global interrupts. */
+  57:main.c        **** 
+  58:main.c        ****     Opamp_1_Start();
+  59:main.c        ****     Opamp_2_Start();
+  60:main.c        ****     PGA_Start();
+  61:main.c        ****     Comp_Start();
+  62:main.c        ****     ADC_Start();
+  63:main.c        ****     UART_Start();
+  64:main.c        ****     Contador_Start();
+  65:main.c        ****     LCD_Start();
+  66:main.c        ****     
+  67:main.c        ****     RXInterrupt_StartEx(Serial);
+  68:main.c        ****     Temporizador_StartEx(Ms);
+  69:main.c        ****     PulsoSensor_StartEx(Medicion);
+  70:main.c        **** 
+  71:main.c        ****     for(;;)
+  72:main.c        ****     {
+  73:main.c        ****         
+  74:main.c        ****         if (tiempo.bandera){
+  75:main.c        ****             tiempo.bandera = 0;
+  76:main.c        ****             tiempo.ms++;
+  77:main.c        ****             if (tiempo.ms%10==0){
+  78:main.c        ****                 tiempo.ms10 = 1;
+  79:main.c        ****             }
+  80:main.c        ****         }
+  81:main.c        ****         
+  82:main.c        ****         if(tiempo.ms10){
+  83:main.c        ****             tiempo.ms10 = 0;
+  84:main.c        ****             tiempo.ms100++;
+  85:main.c        ****             if (tiempo.ms100==11){
+  86:main.c        ****                 tiempo.ms100 = 1;
+  87:main.c        ****             }
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 3
+
+
+  88:main.c        ****             ADC_StartConvert();
+  89:main.c        ****             ADC_IsEndConversion(ADC_WAIT_FOR_RESULT);
+  90:main.c        ****             voltaje.ADC = ADC_GetResult16();
+  91:main.c        ****             voltaje.mv = (uint32)(5000*voltaje.ADC)/4095;
+  92:main.c        ****             UART_PutChar(((voltaje.mv/1000)%10)+48); 
+  93:main.c        ****             UART_PutChar(((voltaje.mv/100)%10)+48); 
+  94:main.c        ****             UART_PutChar(((voltaje.mv/10)%10)+48); 
+  95:main.c        ****             UART_PutChar((voltaje.mv%10)+48); 
+  96:main.c        ****             UART_PutCRLF(' ');
+  97:main.c        ****                    
+  98:main.c        ****             if (pulso.bandera){
+  99:main.c        ****                 pulso.bandera = 0;
+ 100:main.c        ****                 pulso.datoActual = (uint16) 60000/tiempo.ms;
+ 101:main.c        ****                 tiempo.ms = 0;
+ 102:main.c        ****                 
+ 103:main.c        ****                 pulso.dato5 = pulso.dato4;
+ 104:main.c        ****                 pulso.dato4 = pulso.dato3;
+ 105:main.c        ****                 pulso.dato3 = pulso.dato2;
+ 106:main.c        ****                 pulso.dato2 = pulso.dato1;
+ 107:main.c        ****                 pulso.dato1 = pulso.datoActual;
+ 108:main.c        ****                                 
+ 109:main.c        ****                 if((pulso.dato1!=0)&&(pulso.dato2!=0)&&(pulso.dato3!=0)&&(pulso.dato4!=0)&&(pulso.d
+ 110:main.c        ****                     pulso.promedioMovil=(pulso.dato1+pulso.dato2+pulso.dato3+pulso.dato4+pulso.dato
+ 111:main.c        ****                     pulso.dedo = 1;
+ 112:main.c        ****                 }
+ 113:main.c        ****             }
+ 114:main.c        ****             if (tiempo.ms100 == 10){
+ 115:main.c        ****                 voltaje.dato5 = voltaje.dato4;
+ 116:main.c        ****                 voltaje.dato4 = voltaje.dato3;
+ 117:main.c        ****                 voltaje.dato3 = voltaje.dato2;
+ 118:main.c        ****                 voltaje.dato2 = voltaje.dato1;
+ 119:main.c        ****                 voltaje.dato1 = voltaje.mv;
+ 120:main.c        ****                 voltaje.promedioMovil=(voltaje.dato1+voltaje.dato2+voltaje.dato3+voltaje.dato4+volt
+ 121:main.c        ****                 if (voltaje.promedioMovil<=1800){
+ 122:main.c        ****                     pulso.dedo = 0;
+ 123:main.c        ****                 }
+ 124:main.c        ****                 if (pulso.dedo){
+ 125:main.c        ****                     LCD_ClearDisplay();
+ 126:main.c        ****                     LCD_Position(0,0);
+ 127:main.c        ****                     LCD_PrintString("F.cardiaca: ");
+ 128:main.c        ****                     LCD_PrintNumber(pulso.promedioMovil);
+ 129:main.c        ****                     LCD_PrintString(" LPM");
+ 130:main.c        ****                     LCD_Position(1,0);
+ 131:main.c        ****                     LCD_PrintString("F.senal: ");
+ 132:main.c        ****                     LCD_PrintNumber(pulso.promedioMovil/60);
+ 133:main.c        ****                     LCD_PutChar('.');
+ 134:main.c        ****                     LCD_PrintNumber((10*pulso.promedioMovil/60)%10);
+ 135:main.c        ****                     LCD_PrintString(" HZ");
+ 136:main.c        ****                 }
+ 137:main.c        ****                 else{
+ 138:main.c        ****                     LCD_ClearDisplay();
+ 139:main.c        ****                     LCD_Position(0,0);
+ 140:main.c        ****                     LCD_PrintString("F.cardiaca: 0 LPM");
+ 141:main.c        ****                     LCD_Position(1,0);
+ 142:main.c        ****                     LCD_PrintString("F.senal: 0 HZ");
+ 143:main.c        ****                     LCD_Position(2,0);
+ 144:main.c        ****                     LCD_PrintString("No hay dedo");
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 4
+
+
+ 145:main.c        ****                     pulso.dato1 = 0;
+ 146:main.c        ****                     pulso.dato2 = 0;
+ 147:main.c        ****                     pulso.dato3 = 0;
+ 148:main.c        ****                     pulso.dato4 = 0;
+ 149:main.c        ****                     pulso.dato5 = 0;
+ 150:main.c        ****                 }
+ 151:main.c        ****             }
+ 152:main.c        ****         }  
+ 153:main.c        ****     }
+ 154:main.c        ****     
+ 155:main.c        **** }
+ 156:main.c        **** 
+ 157:main.c        **** CY_ISR(Ms){
+  28              		.loc 1 157 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+ 158:main.c        ****     
+ 159:main.c        ****     tiempo.bandera = 1;
+  33              		.loc 1 159 0
+  34 0000 0122     		movs	r2, #1
+  35 0002 014B     		ldr	r3, .L2
+  36 0004 1A70     		strb	r2, [r3]
+  37 0006 7047     		bx	lr
+  38              	.L3:
+  39              		.align	2
+  40              	.L2:
+  41 0008 00000000 		.word	tiempo
+  42              		.cfi_endproc
+  43              	.LFE64:
+  44              		.size	Ms, .-Ms
+  45              		.section	.text.Medicion,"ax",%progbits
+  46              		.align	2
+  47              		.global	Medicion
+  48              		.thumb
+  49              		.thumb_func
+  50              		.type	Medicion, %function
+  51              	Medicion:
+  52              	.LFB65:
+ 160:main.c        ****     
+ 161:main.c        **** }
+ 162:main.c        **** 
+ 163:main.c        **** CY_ISR(Medicion){
+  53              		.loc 1 163 0
+  54              		.cfi_startproc
+  55              		@ args = 0, pretend = 0, frame = 0
+  56              		@ frame_needed = 0, uses_anonymous_args = 0
+  57              		@ link register save eliminated.
+ 164:main.c        ****     
+ 165:main.c        ****     pulso.bandera = 1;
+  58              		.loc 1 165 0
+  59 0000 0122     		movs	r2, #1
+  60 0002 014B     		ldr	r3, .L5
+  61 0004 DA71     		strb	r2, [r3, #7]
+  62 0006 7047     		bx	lr
+  63              	.L6:
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 5
+
+
+  64              		.align	2
+  65              	.L5:
+  66 0008 00000000 		.word	pulso
+  67              		.cfi_endproc
+  68              	.LFE65:
+  69              		.size	Medicion, .-Medicion
+  70              		.section	.text.Serial,"ax",%progbits
+  71              		.align	2
+  72              		.global	Serial
+  73              		.thumb
+  74              		.thumb_func
+  75              		.type	Serial, %function
+  76              	Serial:
+  77              	.LFB66:
+ 166:main.c        ****     
+ 167:main.c        **** }
+ 168:main.c        **** 
+ 169:main.c        **** CY_ISR(Serial){
+  78              		.loc 1 169 0
+  79              		.cfi_startproc
+  80              		@ args = 0, pretend = 0, frame = 0
+  81              		@ frame_needed = 0, uses_anonymous_args = 0
+  82              		@ link register save eliminated.
+  83 0000 7047     		bx	lr
+  84              		.cfi_endproc
+  85              	.LFE66:
+  86              		.size	Serial, .-Serial
+  87 0002 00BF     		.section	.text.main,"ax",%progbits
+  88              		.align	2
+  89              		.global	main
+  90              		.thumb
+  91              		.thumb_func
+  92              		.type	main, %function
+  93              	main:
+  94              	.LFB63:
+  55:main.c        ****     CyGlobalIntEnable; /* Enable global interrupts. */
+  95              		.loc 1 55 0
+  96              		.cfi_startproc
+  97              		@ Volatile: function does not return.
+  98              		@ args = 0, pretend = 0, frame = 0
+  99              		@ frame_needed = 0, uses_anonymous_args = 0
+  55:main.c        ****     CyGlobalIntEnable; /* Enable global interrupts. */
+ 100              		.loc 1 55 0
+ 101 0000 08B5     		push	{r3, lr}
+ 102              		.cfi_def_cfa_offset 8
+ 103              		.cfi_offset 3, -8
+ 104              		.cfi_offset 14, -4
+  56:main.c        **** 
+ 105              		.loc 1 56 0
+ 106              		.syntax unified
+ 107              	@ 56 "main.c" 1
+ 108 0002 62B6     		CPSIE   i
+ 109              	@ 0 "" 2
+  58:main.c        ****     Opamp_2_Start();
+ 110              		.loc 1 58 0
+ 111              		.thumb
+ 112              		.syntax unified
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 6
+
+
+ 113 0004 FFF7FEFF 		bl	Opamp_1_Start
+ 114              	.LVL0:
+  59:main.c        ****     PGA_Start();
+ 115              		.loc 1 59 0
+ 116 0008 FFF7FEFF 		bl	Opamp_2_Start
+ 117              	.LVL1:
+  60:main.c        ****     Comp_Start();
+ 118              		.loc 1 60 0
+ 119 000c FFF7FEFF 		bl	PGA_Start
+ 120              	.LVL2:
+  61:main.c        ****     ADC_Start();
+ 121              		.loc 1 61 0
+ 122 0010 FFF7FEFF 		bl	Comp_Start
+ 123              	.LVL3:
+  62:main.c        ****     UART_Start();
+ 124              		.loc 1 62 0
+ 125 0014 FFF7FEFF 		bl	ADC_Start
+ 126              	.LVL4:
+  63:main.c        ****     Contador_Start();
+ 127              		.loc 1 63 0
+ 128 0018 FFF7FEFF 		bl	UART_Start
+ 129              	.LVL5:
+  64:main.c        ****     LCD_Start();
+ 130              		.loc 1 64 0
+ 131 001c FFF7FEFF 		bl	Contador_Start
+ 132              	.LVL6:
+  65:main.c        ****     
+ 133              		.loc 1 65 0
+ 134 0020 FFF7FEFF 		bl	LCD_Start
+ 135              	.LVL7:
+  67:main.c        ****     Temporizador_StartEx(Ms);
+ 136              		.loc 1 67 0
+ 137 0024 9948     		ldr	r0, .L19
+ 138 0026 FFF7FEFF 		bl	RXInterrupt_StartEx
+ 139              	.LVL8:
+  68:main.c        ****     PulsoSensor_StartEx(Medicion);
+ 140              		.loc 1 68 0
+ 141 002a 9948     		ldr	r0, .L19+4
+ 142 002c FFF7FEFF 		bl	Temporizador_StartEx
+ 143              	.LVL9:
+  69:main.c        **** 
+ 144              		.loc 1 69 0
+ 145 0030 9848     		ldr	r0, .L19+8
+ 146 0032 FFF7FEFF 		bl	PulsoSensor_StartEx
+ 147              	.LVL10:
+ 148              	.L11:
+  74:main.c        ****             tiempo.bandera = 0;
+ 149              		.loc 1 74 0
+ 150 0036 984B     		ldr	r3, .L19+12
+ 151 0038 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 152 003a 9BB1     		cbz	r3, .L10
+  75:main.c        ****             tiempo.ms++;
+ 153              		.loc 1 75 0
+ 154 003c 964A     		ldr	r2, .L19+12
+ 155 003e 0023     		movs	r3, #0
+ 156 0040 1370     		strb	r3, [r2]
+  76:main.c        ****             if (tiempo.ms%10==0){
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 7
+
+
+ 157              		.loc 1 76 0
+ 158 0042 5388     		ldrh	r3, [r2, #2]
+ 159 0044 0133     		adds	r3, r3, #1
+ 160 0046 9BB2     		uxth	r3, r3
+ 161 0048 5380     		strh	r3, [r2, #2]	@ movhi
+  77:main.c        ****                 tiempo.ms10 = 1;
+ 162              		.loc 1 77 0
+ 163 004a 944A     		ldr	r2, .L19+16
+ 164 004c A2FB0312 		umull	r1, r2, r2, r3
+ 165 0050 D208     		lsrs	r2, r2, #3
+ 166 0052 02EB8202 		add	r2, r2, r2, lsl #2
+ 167 0056 5100     		lsls	r1, r2, #1
+ 168 0058 5B1A     		subs	r3, r3, r1
+ 169 005a 9BB2     		uxth	r3, r3
+ 170 005c 13B9     		cbnz	r3, .L10
+  78:main.c        ****             }
+ 171              		.loc 1 78 0
+ 172 005e 0122     		movs	r2, #1
+ 173 0060 8D4B     		ldr	r3, .L19+12
+ 174 0062 1A71     		strb	r2, [r3, #4]
+ 175              	.L10:
+  82:main.c        ****             tiempo.ms10 = 0;
+ 176              		.loc 1 82 0
+ 177 0064 8C4B     		ldr	r3, .L19+12
+ 178 0066 1B79     		ldrb	r3, [r3, #4]	@ zero_extendqisi2
+ 179 0068 002B     		cmp	r3, #0
+ 180 006a E4D0     		beq	.L11
+  83:main.c        ****             tiempo.ms100++;
+ 181              		.loc 1 83 0
+ 182 006c 8A4A     		ldr	r2, .L19+12
+ 183 006e 0023     		movs	r3, #0
+ 184 0070 1371     		strb	r3, [r2, #4]
+  84:main.c        ****             if (tiempo.ms100==11){
+ 185              		.loc 1 84 0
+ 186 0072 5379     		ldrb	r3, [r2, #5]	@ zero_extendqisi2
+ 187 0074 0133     		adds	r3, r3, #1
+ 188 0076 DBB2     		uxtb	r3, r3
+ 189 0078 5371     		strb	r3, [r2, #5]
+  85:main.c        ****                 tiempo.ms100 = 1;
+ 190              		.loc 1 85 0
+ 191 007a 0B2B     		cmp	r3, #11
+ 192 007c 02D1     		bne	.L12
+  86:main.c        ****             }
+ 193              		.loc 1 86 0
+ 194 007e 0122     		movs	r2, #1
+ 195 0080 854B     		ldr	r3, .L19+12
+ 196 0082 5A71     		strb	r2, [r3, #5]
+ 197              	.L12:
+  88:main.c        ****             ADC_IsEndConversion(ADC_WAIT_FOR_RESULT);
+ 198              		.loc 1 88 0
+ 199 0084 FFF7FEFF 		bl	ADC_StartConvert
+ 200              	.LVL11:
+  89:main.c        ****             voltaje.ADC = ADC_GetResult16();
+ 201              		.loc 1 89 0
+ 202 0088 0020     		movs	r0, #0
+ 203 008a FFF7FEFF 		bl	ADC_IsEndConversion
+ 204              	.LVL12:
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 8
+
+
+  90:main.c        ****             voltaje.mv = (uint32)(5000*voltaje.ADC)/4095;
+ 205              		.loc 1 90 0
+ 206 008e FFF7FEFF 		bl	ADC_GetResult16
+ 207              	.LVL13:
+ 208 0092 80B2     		uxth	r0, r0
+ 209 0094 824C     		ldr	r4, .L19+20
+ 210 0096 2080     		strh	r0, [r4]	@ movhi
+  91:main.c        ****             UART_PutChar(((voltaje.mv/1000)%10)+48); 
+ 211              		.loc 1 91 0
+ 212 0098 41F28833 		movw	r3, #5000
+ 213 009c 03FB00F3 		mul	r3, r3, r0
+ 214 00a0 804A     		ldr	r2, .L19+24
+ 215 00a2 A2FB0312 		umull	r1, r2, r2, r3
+ 216 00a6 9B1A     		subs	r3, r3, r2
+ 217 00a8 02EB5303 		add	r3, r2, r3, lsr #1
+ 218 00ac C3F3CF23 		ubfx	r3, r3, #11, #16
+ 219 00b0 6380     		strh	r3, [r4, #2]	@ movhi
+  92:main.c        ****             UART_PutChar(((voltaje.mv/100)%10)+48); 
+ 220              		.loc 1 92 0
+ 221 00b2 7D4A     		ldr	r2, .L19+28
+ 222 00b4 A2FB0323 		umull	r2, r3, r2, r3
+ 223 00b8 9B09     		lsrs	r3, r3, #6
+ 224 00ba 784D     		ldr	r5, .L19+16
+ 225 00bc A5FB0312 		umull	r1, r2, r5, r3
+ 226 00c0 D208     		lsrs	r2, r2, #3
+ 227 00c2 02EB8202 		add	r2, r2, r2, lsl #2
+ 228 00c6 5000     		lsls	r0, r2, #1
+ 229 00c8 181A     		subs	r0, r3, r0
+ 230 00ca 3030     		adds	r0, r0, #48
+ 231 00cc C0B2     		uxtb	r0, r0
+ 232 00ce FFF7FEFF 		bl	UART_PutChar
+ 233              	.LVL14:
+  93:main.c        ****             UART_PutChar(((voltaje.mv/10)%10)+48); 
+ 234              		.loc 1 93 0
+ 235 00d2 6388     		ldrh	r3, [r4, #2]
+ 236 00d4 754A     		ldr	r2, .L19+32
+ 237 00d6 A2FB0323 		umull	r2, r3, r2, r3
+ 238 00da 5B09     		lsrs	r3, r3, #5
+ 239 00dc A5FB0312 		umull	r1, r2, r5, r3
+ 240 00e0 D208     		lsrs	r2, r2, #3
+ 241 00e2 02EB8202 		add	r2, r2, r2, lsl #2
+ 242 00e6 5000     		lsls	r0, r2, #1
+ 243 00e8 181A     		subs	r0, r3, r0
+ 244 00ea 3030     		adds	r0, r0, #48
+ 245 00ec C0B2     		uxtb	r0, r0
+ 246 00ee FFF7FEFF 		bl	UART_PutChar
+ 247              	.LVL15:
+  94:main.c        ****             UART_PutChar((voltaje.mv%10)+48); 
+ 248              		.loc 1 94 0
+ 249 00f2 6388     		ldrh	r3, [r4, #2]
+ 250 00f4 A5FB0323 		umull	r2, r3, r5, r3
+ 251 00f8 DB08     		lsrs	r3, r3, #3
+ 252 00fa A5FB0312 		umull	r1, r2, r5, r3
+ 253 00fe D208     		lsrs	r2, r2, #3
+ 254 0100 02EB8202 		add	r2, r2, r2, lsl #2
+ 255 0104 5000     		lsls	r0, r2, #1
+ 256 0106 181A     		subs	r0, r3, r0
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 9
+
+
+ 257 0108 3030     		adds	r0, r0, #48
+ 258 010a C0B2     		uxtb	r0, r0
+ 259 010c FFF7FEFF 		bl	UART_PutChar
+ 260              	.LVL16:
+  95:main.c        ****             UART_PutCRLF(' ');
+ 261              		.loc 1 95 0
+ 262 0110 6388     		ldrh	r3, [r4, #2]
+ 263 0112 A5FB0325 		umull	r2, r5, r5, r3
+ 264 0116 ED08     		lsrs	r5, r5, #3
+ 265 0118 05EB8505 		add	r5, r5, r5, lsl #2
+ 266 011c 6800     		lsls	r0, r5, #1
+ 267 011e 181A     		subs	r0, r3, r0
+ 268 0120 3030     		adds	r0, r0, #48
+ 269 0122 C0B2     		uxtb	r0, r0
+ 270 0124 FFF7FEFF 		bl	UART_PutChar
+ 271              	.LVL17:
+  96:main.c        ****                    
+ 272              		.loc 1 96 0
+ 273 0128 2020     		movs	r0, #32
+ 274 012a FFF7FEFF 		bl	UART_PutCRLF
+ 275              	.LVL18:
+  98:main.c        ****                 pulso.bandera = 0;
+ 276              		.loc 1 98 0
+ 277 012e 604B     		ldr	r3, .L19+36
+ 278 0130 DB79     		ldrb	r3, [r3, #7]	@ zero_extendqisi2
+ 279 0132 3BB3     		cbz	r3, .L13
+  99:main.c        ****                 pulso.datoActual = (uint16) 60000/tiempo.ms;
+ 280              		.loc 1 99 0
+ 281 0134 5E4B     		ldr	r3, .L19+36
+ 282 0136 0020     		movs	r0, #0
+ 283 0138 D871     		strb	r0, [r3, #7]
+ 100:main.c        ****                 tiempo.ms = 0;
+ 284              		.loc 1 100 0
+ 285 013a 5749     		ldr	r1, .L19+12
+ 286 013c 4C88     		ldrh	r4, [r1, #2]
+ 287 013e 4EF66022 		movw	r2, #60000
+ 288 0142 B2FBF4F2 		udiv	r2, r2, r4
+ 289 0146 D2B2     		uxtb	r2, r2
+ 290 0148 5A71     		strb	r2, [r3, #5]
+ 101:main.c        ****                 
+ 291              		.loc 1 101 0
+ 292 014a 4880     		strh	r0, [r1, #2]	@ movhi
+ 103:main.c        ****                 pulso.dato4 = pulso.dato3;
+ 293              		.loc 1 103 0
+ 294 014c DD78     		ldrb	r5, [r3, #3]	@ zero_extendqisi2
+ 295 014e 1D71     		strb	r5, [r3, #4]
+ 104:main.c        ****                 pulso.dato3 = pulso.dato2;
+ 296              		.loc 1 104 0
+ 297 0150 9C78     		ldrb	r4, [r3, #2]	@ zero_extendqisi2
+ 298 0152 DC70     		strb	r4, [r3, #3]
+ 105:main.c        ****                 pulso.dato2 = pulso.dato1;
+ 299              		.loc 1 105 0
+ 300 0154 5878     		ldrb	r0, [r3, #1]	@ zero_extendqisi2
+ 301 0156 9870     		strb	r0, [r3, #2]
+ 106:main.c        ****                 pulso.dato1 = pulso.datoActual;
+ 302              		.loc 1 106 0
+ 303 0158 1978     		ldrb	r1, [r3]	@ zero_extendqisi2
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 10
+
+
+ 304 015a 5970     		strb	r1, [r3, #1]
+ 107:main.c        ****                                 
+ 305              		.loc 1 107 0
+ 306 015c 1A70     		strb	r2, [r3]
+ 109:main.c        ****                     pulso.promedioMovil=(pulso.dato1+pulso.dato2+pulso.dato3+pulso.dato4+pulso.dato
+ 307              		.loc 1 109 0
+ 308 015e 8AB1     		cbz	r2, .L13
+ 109:main.c        ****                     pulso.promedioMovil=(pulso.dato1+pulso.dato2+pulso.dato3+pulso.dato4+pulso.dato
+ 309              		.loc 1 109 0 is_stmt 0 discriminator 1
+ 310 0160 81B1     		cbz	r1, .L13
+ 109:main.c        ****                     pulso.promedioMovil=(pulso.dato1+pulso.dato2+pulso.dato3+pulso.dato4+pulso.dato
+ 311              		.loc 1 109 0 discriminator 2
+ 312 0162 78B1     		cbz	r0, .L13
+ 109:main.c        ****                     pulso.promedioMovil=(pulso.dato1+pulso.dato2+pulso.dato3+pulso.dato4+pulso.dato
+ 313              		.loc 1 109 0 discriminator 3
+ 314 0164 74B1     		cbz	r4, .L13
+ 109:main.c        ****                     pulso.promedioMovil=(pulso.dato1+pulso.dato2+pulso.dato3+pulso.dato4+pulso.dato
+ 315              		.loc 1 109 0 discriminator 4
+ 316 0166 6DB1     		cbz	r5, .L13
+ 110:main.c        ****                     pulso.dedo = 1;
+ 317              		.loc 1 110 0 is_stmt 1
+ 318 0168 0A44     		add	r2, r2, r1
+ 319 016a 0244     		add	r2, r2, r0
+ 320 016c A318     		adds	r3, r4, r2
+ 321 016e 2B44     		add	r3, r3, r5
+ 322 0170 504A     		ldr	r2, .L19+40
+ 323 0172 82FB0312 		smull	r1, r2, r2, r3
+ 324 0176 DB17     		asrs	r3, r3, #31
+ 325 0178 C3EB6203 		rsb	r3, r3, r2, asr #1
+ 326 017c 4C4A     		ldr	r2, .L19+36
+ 327 017e 9371     		strb	r3, [r2, #6]
+ 111:main.c        ****                 }
+ 328              		.loc 1 111 0
+ 329 0180 0123     		movs	r3, #1
+ 330 0182 1372     		strb	r3, [r2, #8]
+ 331              	.L13:
+ 114:main.c        ****                 voltaje.dato5 = voltaje.dato4;
+ 332              		.loc 1 114 0
+ 333 0184 444B     		ldr	r3, .L19+12
+ 334 0186 5B79     		ldrb	r3, [r3, #5]	@ zero_extendqisi2
+ 335 0188 0A2B     		cmp	r3, #10
+ 336 018a 7FF454AF 		bne	.L11
+ 115:main.c        ****                 voltaje.dato4 = voltaje.dato3;
+ 337              		.loc 1 115 0
+ 338 018e 4449     		ldr	r1, .L19+20
+ 339 0190 4889     		ldrh	r0, [r1, #10]
+ 340 0192 8881     		strh	r0, [r1, #12]	@ movhi
+ 116:main.c        ****                 voltaje.dato3 = voltaje.dato2;
+ 341              		.loc 1 116 0
+ 342 0194 0B89     		ldrh	r3, [r1, #8]
+ 343 0196 4B81     		strh	r3, [r1, #10]	@ movhi
+ 117:main.c        ****                 voltaje.dato2 = voltaje.dato1;
+ 344              		.loc 1 117 0
+ 345 0198 CC88     		ldrh	r4, [r1, #6]
+ 346 019a 0C81     		strh	r4, [r1, #8]	@ movhi
+ 118:main.c        ****                 voltaje.dato1 = voltaje.mv;
+ 347              		.loc 1 118 0
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 11
+
+
+ 348 019c 8A88     		ldrh	r2, [r1, #4]
+ 349 019e CA80     		strh	r2, [r1, #6]	@ movhi
+ 119:main.c        ****                 voltaje.promedioMovil=(voltaje.dato1+voltaje.dato2+voltaje.dato3+voltaje.dato4+volt
+ 350              		.loc 1 119 0
+ 351 01a0 4D88     		ldrh	r5, [r1, #2]
+ 352 01a2 8D80     		strh	r5, [r1, #4]	@ movhi
+ 120:main.c        ****                 if (voltaje.promedioMovil<=1800){
+ 353              		.loc 1 120 0
+ 354 01a4 2A44     		add	r2, r2, r5
+ 355 01a6 2244     		add	r2, r2, r4
+ 356 01a8 1344     		add	r3, r3, r2
+ 357 01aa 0344     		add	r3, r3, r0
+ 358 01ac 414A     		ldr	r2, .L19+40
+ 359 01ae 82FB0302 		smull	r0, r2, r2, r3
+ 360 01b2 DB17     		asrs	r3, r3, #31
+ 361 01b4 C3EB6203 		rsb	r3, r3, r2, asr #1
+ 362 01b8 9BB2     		uxth	r3, r3
+ 363 01ba CB81     		strh	r3, [r1, #14]	@ movhi
+ 121:main.c        ****                     pulso.dedo = 0;
+ 364              		.loc 1 121 0
+ 365 01bc B3F5E16F 		cmp	r3, #1800
+ 366 01c0 02D8     		bhi	.L15
+ 122:main.c        ****                 }
+ 367              		.loc 1 122 0
+ 368 01c2 0022     		movs	r2, #0
+ 369 01c4 3A4B     		ldr	r3, .L19+36
+ 370 01c6 1A72     		strb	r2, [r3, #8]
+ 371              	.L15:
+ 124:main.c        ****                     LCD_ClearDisplay();
+ 372              		.loc 1 124 0
+ 373 01c8 394B     		ldr	r3, .L19+36
+ 374 01ca 1B7A     		ldrb	r3, [r3, #8]	@ zero_extendqisi2
+ 375 01cc 002B     		cmp	r3, #0
+ 376 01ce 3CD0     		beq	.L16
+ 125:main.c        ****                     LCD_Position(0,0);
+ 377              		.loc 1 125 0
+ 378 01d0 0120     		movs	r0, #1
+ 379 01d2 FFF7FEFF 		bl	LCD_WriteControl
+ 380              	.LVL19:
+ 126:main.c        ****                     LCD_PrintString("F.cardiaca: ");
+ 381              		.loc 1 126 0
+ 382 01d6 0021     		movs	r1, #0
+ 383 01d8 0846     		mov	r0, r1
+ 384 01da FFF7FEFF 		bl	LCD_Position
+ 385              	.LVL20:
+ 127:main.c        ****                     LCD_PrintNumber(pulso.promedioMovil);
+ 386              		.loc 1 127 0
+ 387 01de 3648     		ldr	r0, .L19+44
+ 388 01e0 FFF7FEFF 		bl	LCD_PrintString
+ 389              	.LVL21:
+ 128:main.c        ****                     LCD_PrintString(" LPM");
+ 390              		.loc 1 128 0
+ 391 01e4 324D     		ldr	r5, .L19+36
+ 392 01e6 A879     		ldrb	r0, [r5, #6]	@ zero_extendqisi2
+ 393 01e8 FFF7FEFF 		bl	LCD_PrintU32Number
+ 394              	.LVL22:
+ 129:main.c        ****                     LCD_Position(1,0);
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 12
+
+
+ 395              		.loc 1 129 0
+ 396 01ec 3348     		ldr	r0, .L19+48
+ 397 01ee FFF7FEFF 		bl	LCD_PrintString
+ 398              	.LVL23:
+ 130:main.c        ****                     LCD_PrintString("F.senal: ");
+ 399              		.loc 1 130 0
+ 400 01f2 0021     		movs	r1, #0
+ 401 01f4 0120     		movs	r0, #1
+ 402 01f6 FFF7FEFF 		bl	LCD_Position
+ 403              	.LVL24:
+ 131:main.c        ****                     LCD_PrintNumber(pulso.promedioMovil/60);
+ 404              		.loc 1 131 0
+ 405 01fa 3148     		ldr	r0, .L19+52
+ 406 01fc FFF7FEFF 		bl	LCD_PrintString
+ 407              	.LVL25:
+ 132:main.c        ****                     LCD_PutChar('.');
+ 408              		.loc 1 132 0
+ 409 0200 A879     		ldrb	r0, [r5, #6]	@ zero_extendqisi2
+ 410 0202 304C     		ldr	r4, .L19+56
+ 411 0204 A4FB0030 		umull	r3, r0, r4, r0
+ 412 0208 4009     		lsrs	r0, r0, #5
+ 413 020a FFF7FEFF 		bl	LCD_PrintU32Number
+ 414              	.LVL26:
+ 133:main.c        ****                     LCD_PrintNumber((10*pulso.promedioMovil/60)%10);
+ 415              		.loc 1 133 0
+ 416 020e 2E20     		movs	r0, #46
+ 417 0210 FFF7FEFF 		bl	LCD_PutChar
+ 418              	.LVL27:
+ 134:main.c        ****                     LCD_PrintString(" HZ");
+ 419              		.loc 1 134 0
+ 420 0214 AA79     		ldrb	r2, [r5, #6]	@ zero_extendqisi2
+ 421 0216 02EB8202 		add	r2, r2, r2, lsl #2
+ 422 021a 5300     		lsls	r3, r2, #1
+ 423 021c 84FB0312 		smull	r1, r2, r4, r3
+ 424 0220 1A44     		add	r2, r2, r3
+ 425 0222 DB17     		asrs	r3, r3, #31
+ 426 0224 C3EB6213 		rsb	r3, r3, r2, asr #5
+ 427 0228 2248     		ldr	r0, .L19+40
+ 428 022a 80FB0320 		smull	r2, r0, r0, r3
+ 429 022e DA17     		asrs	r2, r3, #31
+ 430 0230 C2EBA000 		rsb	r0, r2, r0, asr #2
+ 431 0234 00EB8000 		add	r0, r0, r0, lsl #2
+ 432 0238 4200     		lsls	r2, r0, #1
+ 433 023a 981A     		subs	r0, r3, r2
+ 434 023c 80B2     		uxth	r0, r0
+ 435 023e FFF7FEFF 		bl	LCD_PrintU32Number
+ 436              	.LVL28:
+ 135:main.c        ****                 }
+ 437              		.loc 1 135 0
+ 438 0242 2148     		ldr	r0, .L19+60
+ 439 0244 FFF7FEFF 		bl	LCD_PrintString
+ 440              	.LVL29:
+ 441 0248 F5E6     		b	.L11
+ 442              	.L16:
+ 138:main.c        ****                     LCD_Position(0,0);
+ 443              		.loc 1 138 0
+ 444 024a 0120     		movs	r0, #1
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 13
+
+
+ 445 024c FFF7FEFF 		bl	LCD_WriteControl
+ 446              	.LVL30:
+ 139:main.c        ****                     LCD_PrintString("F.cardiaca: 0 LPM");
+ 447              		.loc 1 139 0
+ 448 0250 0021     		movs	r1, #0
+ 449 0252 0846     		mov	r0, r1
+ 450 0254 FFF7FEFF 		bl	LCD_Position
+ 451              	.LVL31:
+ 140:main.c        ****                     LCD_Position(1,0);
+ 452              		.loc 1 140 0
+ 453 0258 1C48     		ldr	r0, .L19+64
+ 454 025a FFF7FEFF 		bl	LCD_PrintString
+ 455              	.LVL32:
+ 141:main.c        ****                     LCD_PrintString("F.senal: 0 HZ");
+ 456              		.loc 1 141 0
+ 457 025e 0021     		movs	r1, #0
+ 458 0260 0120     		movs	r0, #1
+ 459 0262 FFF7FEFF 		bl	LCD_Position
+ 460              	.LVL33:
+ 142:main.c        ****                     LCD_Position(2,0);
+ 461              		.loc 1 142 0
+ 462 0266 1A48     		ldr	r0, .L19+68
+ 463 0268 FFF7FEFF 		bl	LCD_PrintString
+ 464              	.LVL34:
+ 143:main.c        ****                     LCD_PrintString("No hay dedo");
+ 465              		.loc 1 143 0
+ 466 026c 0021     		movs	r1, #0
+ 467 026e 0220     		movs	r0, #2
+ 468 0270 FFF7FEFF 		bl	LCD_Position
+ 469              	.LVL35:
+ 144:main.c        ****                     pulso.dato1 = 0;
+ 470              		.loc 1 144 0
+ 471 0274 1748     		ldr	r0, .L19+72
+ 472 0276 FFF7FEFF 		bl	LCD_PrintString
+ 473              	.LVL36:
+ 145:main.c        ****                     pulso.dato2 = 0;
+ 474              		.loc 1 145 0
+ 475 027a 0D4B     		ldr	r3, .L19+36
+ 476 027c 0022     		movs	r2, #0
+ 477 027e 1A70     		strb	r2, [r3]
+ 146:main.c        ****                     pulso.dato3 = 0;
+ 478              		.loc 1 146 0
+ 479 0280 5A70     		strb	r2, [r3, #1]
+ 147:main.c        ****                     pulso.dato4 = 0;
+ 480              		.loc 1 147 0
+ 481 0282 9A70     		strb	r2, [r3, #2]
+ 148:main.c        ****                     pulso.dato5 = 0;
+ 482              		.loc 1 148 0
+ 483 0284 DA70     		strb	r2, [r3, #3]
+ 149:main.c        ****                 }
+ 484              		.loc 1 149 0
+ 485 0286 1A71     		strb	r2, [r3, #4]
+ 486 0288 D5E6     		b	.L11
+ 487              	.L20:
+ 488 028a 00BF     		.align	2
+ 489              	.L19:
+ 490 028c 00000000 		.word	Serial
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 14
+
+
+ 491 0290 00000000 		.word	Ms
+ 492 0294 00000000 		.word	Medicion
+ 493 0298 00000000 		.word	tiempo
+ 494 029c CDCCCCCC 		.word	-858993459
+ 495 02a0 00000000 		.word	voltaje
+ 496 02a4 01011000 		.word	1048833
+ 497 02a8 D34D6210 		.word	274877907
+ 498 02ac 1F85EB51 		.word	1374389535
+ 499 02b0 00000000 		.word	pulso
+ 500 02b4 67666666 		.word	1717986919
+ 501 02b8 00000000 		.word	.LC0
+ 502 02bc 10000000 		.word	.LC1
+ 503 02c0 18000000 		.word	.LC2
+ 504 02c4 89888888 		.word	-2004318071
+ 505 02c8 24000000 		.word	.LC3
+ 506 02cc 28000000 		.word	.LC4
+ 507 02d0 3C000000 		.word	.LC5
+ 508 02d4 4C000000 		.word	.LC6
+ 509              		.cfi_endproc
+ 510              	.LFE63:
+ 511              		.size	main, .-main
+ 512              		.comm	voltaje,16,4
+ 513              		.comm	tiempo,6,4
+ 514              		.comm	pulso,9,4
+ 515              		.section	.rodata.str1.4,"aMS",%progbits,1
+ 516              		.align	2
+ 517              	.LC0:
+ 518 0000 462E6361 		.ascii	"F.cardiaca: \000"
+ 518      72646961 
+ 518      63613A20 
+ 518      00
+ 519 000d 000000   		.space	3
+ 520              	.LC1:
+ 521 0010 204C504D 		.ascii	" LPM\000"
+ 521      00
+ 522 0015 000000   		.space	3
+ 523              	.LC2:
+ 524 0018 462E7365 		.ascii	"F.senal: \000"
+ 524      6E616C3A 
+ 524      2000
+ 525 0022 0000     		.space	2
+ 526              	.LC3:
+ 527 0024 20485A00 		.ascii	" HZ\000"
+ 528              	.LC4:
+ 529 0028 462E6361 		.ascii	"F.cardiaca: 0 LPM\000"
+ 529      72646961 
+ 529      63613A20 
+ 529      30204C50 
+ 529      4D00
+ 530 003a 0000     		.space	2
+ 531              	.LC5:
+ 532 003c 462E7365 		.ascii	"F.senal: 0 HZ\000"
+ 532      6E616C3A 
+ 532      20302048 
+ 532      5A00
+ 533 004a 0000     		.space	2
+ 534              	.LC6:
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 15
+
+
+ 535 004c 4E6F2068 		.ascii	"No hay dedo\000"
+ 535      61792064 
+ 535      65646F00 
+ 536              		.text
+ 537              	.Letext0:
+ 538              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 539              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 540              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+ 541              		.file 5 "Generated_Source\\PSoC5/core_cm3.h"
+ 542              		.file 6 "Generated_Source\\PSoC5/Opamp_1.h"
+ 543              		.file 7 "Generated_Source\\PSoC5/Opamp_2.h"
+ 544              		.file 8 "Generated_Source\\PSoC5/PGA.h"
+ 545              		.file 9 "Generated_Source\\PSoC5/Comp.h"
+ 546              		.file 10 "Generated_Source\\PSoC5/ADC.h"
+ 547              		.file 11 "Generated_Source\\PSoC5/UART.h"
+ 548              		.file 12 "Generated_Source\\PSoC5/Contador.h"
+ 549              		.file 13 "Generated_Source\\PSoC5/LCD.h"
+ 550              		.file 14 "Generated_Source\\PSoC5/RXInterrupt.h"
+ 551              		.file 15 "Generated_Source\\PSoC5/Temporizador.h"
+ 552              		.file 16 "Generated_Source\\PSoC5/PulsoSensor.h"
+ 553              		.section	.debug_info,"",%progbits
+ 554              	.Ldebug_info0:
+ 555 0000 B1050000 		.4byte	0x5b1
+ 556 0004 0400     		.2byte	0x4
+ 557 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 558 000a 04       		.byte	0x4
+ 559 000b 01       		.uleb128 0x1
+ 560 000c D8020000 		.4byte	.LASF60
+ 561 0010 0C       		.byte	0xc
+ 562 0011 3C020000 		.4byte	.LASF61
+ 563 0015 BA010000 		.4byte	.LASF62
+ 564 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 565 001d 00000000 		.4byte	0
+ 566 0021 00000000 		.4byte	.Ldebug_line0
+ 567 0025 02       		.uleb128 0x2
+ 568 0026 01       		.byte	0x1
+ 569 0027 06       		.byte	0x6
+ 570 0028 31010000 		.4byte	.LASF0
+ 571 002c 02       		.uleb128 0x2
+ 572 002d 01       		.byte	0x1
+ 573 002e 08       		.byte	0x8
+ 574 002f 23010000 		.4byte	.LASF1
+ 575 0033 02       		.uleb128 0x2
+ 576 0034 02       		.byte	0x2
+ 577 0035 05       		.byte	0x5
+ 578 0036 40000000 		.4byte	.LASF2
+ 579 003a 02       		.uleb128 0x2
+ 580 003b 02       		.byte	0x2
+ 581 003c 07       		.byte	0x7
+ 582 003d 8F010000 		.4byte	.LASF3
+ 583 0041 03       		.uleb128 0x3
+ 584 0042 86020000 		.4byte	.LASF9
+ 585 0046 02       		.byte	0x2
+ 586 0047 3F       		.byte	0x3f
+ 587 0048 4C000000 		.4byte	0x4c
+ 588 004c 02       		.uleb128 0x2
+ 589 004d 04       		.byte	0x4
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 16
+
+
+ 590 004e 05       		.byte	0x5
+ 591 004f FA000000 		.4byte	.LASF4
+ 592 0053 02       		.uleb128 0x2
+ 593 0054 04       		.byte	0x4
+ 594 0055 07       		.byte	0x7
+ 595 0056 50020000 		.4byte	.LASF5
+ 596 005a 02       		.uleb128 0x2
+ 597 005b 08       		.byte	0x8
+ 598 005c 05       		.byte	0x5
+ 599 005d E2000000 		.4byte	.LASF6
+ 600 0061 02       		.uleb128 0x2
+ 601 0062 08       		.byte	0x8
+ 602 0063 07       		.byte	0x7
+ 603 0064 45010000 		.4byte	.LASF7
+ 604 0068 04       		.uleb128 0x4
+ 605 0069 04       		.byte	0x4
+ 606 006a 05       		.byte	0x5
+ 607 006b 696E7400 		.ascii	"int\000"
+ 608 006f 02       		.uleb128 0x2
+ 609 0070 04       		.byte	0x4
+ 610 0071 07       		.byte	0x7
+ 611 0072 67010000 		.4byte	.LASF8
+ 612 0076 03       		.uleb128 0x3
+ 613 0077 3D010000 		.4byte	.LASF10
+ 614 007b 03       		.byte	0x3
+ 615 007c 2C       		.byte	0x2c
+ 616 007d 41000000 		.4byte	0x41
+ 617 0081 05       		.uleb128 0x5
+ 618 0082 19020000 		.4byte	.LASF11
+ 619 0086 04       		.byte	0x4
+ 620 0087 E801     		.2byte	0x1e8
+ 621 0089 2C000000 		.4byte	0x2c
+ 622 008d 05       		.uleb128 0x5
+ 623 008e 91000000 		.4byte	.LASF12
+ 624 0092 04       		.byte	0x4
+ 625 0093 E901     		.2byte	0x1e9
+ 626 0095 3A000000 		.4byte	0x3a
+ 627 0099 05       		.uleb128 0x5
+ 628 009a 35020000 		.4byte	.LASF13
+ 629 009e 04       		.byte	0x4
+ 630 009f EA01     		.2byte	0x1ea
+ 631 00a1 53000000 		.4byte	0x53
+ 632 00a5 02       		.uleb128 0x2
+ 633 00a6 04       		.byte	0x4
+ 634 00a7 04       		.byte	0x4
+ 635 00a8 DC000000 		.4byte	.LASF14
+ 636 00ac 02       		.uleb128 0x2
+ 637 00ad 08       		.byte	0x8
+ 638 00ae 04       		.byte	0x4
+ 639 00af 62020000 		.4byte	.LASF15
+ 640 00b3 02       		.uleb128 0x2
+ 641 00b4 01       		.byte	0x1
+ 642 00b5 08       		.byte	0x8
+ 643 00b6 B5010000 		.4byte	.LASF16
+ 644 00ba 02       		.uleb128 0x2
+ 645 00bb 08       		.byte	0x8
+ 646 00bc 04       		.byte	0x4
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 17
+
+
+ 647 00bd 17010000 		.4byte	.LASF17
+ 648 00c1 02       		.uleb128 0x2
+ 649 00c2 04       		.byte	0x4
+ 650 00c3 07       		.byte	0x7
+ 651 00c4 4A000000 		.4byte	.LASF18
+ 652 00c8 06       		.uleb128 0x6
+ 653 00c9 29000000 		.4byte	.LASF28
+ 654 00cd 09       		.byte	0x9
+ 655 00ce 01       		.byte	0x1
+ 656 00cf 0E       		.byte	0xe
+ 657 00d0 41010000 		.4byte	0x141
+ 658 00d4 07       		.uleb128 0x7
+ 659 00d5 FB010000 		.4byte	.LASF19
+ 660 00d9 01       		.byte	0x1
+ 661 00da 0F       		.byte	0xf
+ 662 00db 81000000 		.4byte	0x81
+ 663 00df 00       		.byte	0
+ 664 00e0 07       		.uleb128 0x7
+ 665 00e1 01020000 		.4byte	.LASF20
+ 666 00e5 01       		.byte	0x1
+ 667 00e6 10       		.byte	0x10
+ 668 00e7 81000000 		.4byte	0x81
+ 669 00eb 01       		.byte	0x1
+ 670 00ec 07       		.uleb128 0x7
+ 671 00ed 07020000 		.4byte	.LASF21
+ 672 00f1 01       		.byte	0x1
+ 673 00f2 11       		.byte	0x11
+ 674 00f3 81000000 		.4byte	0x81
+ 675 00f7 02       		.byte	0x2
+ 676 00f8 07       		.uleb128 0x7
+ 677 00f9 0D020000 		.4byte	.LASF22
+ 678 00fd 01       		.byte	0x1
+ 679 00fe 12       		.byte	0x12
+ 680 00ff 81000000 		.4byte	0x81
+ 681 0103 03       		.byte	0x3
+ 682 0104 07       		.uleb128 0x7
+ 683 0105 13020000 		.4byte	.LASF23
+ 684 0109 01       		.byte	0x1
+ 685 010a 13       		.byte	0x13
+ 686 010b 81000000 		.4byte	0x81
+ 687 010f 04       		.byte	0x4
+ 688 0110 07       		.uleb128 0x7
+ 689 0111 84010000 		.4byte	.LASF24
+ 690 0115 01       		.byte	0x1
+ 691 0116 14       		.byte	0x14
+ 692 0117 81000000 		.4byte	0x81
+ 693 011b 05       		.byte	0x5
+ 694 011c 07       		.uleb128 0x7
+ 695 011d A3000000 		.4byte	.LASF25
+ 696 0121 01       		.byte	0x1
+ 697 0122 15       		.byte	0x15
+ 698 0123 81000000 		.4byte	0x81
+ 699 0127 06       		.byte	0x6
+ 700 0128 07       		.uleb128 0x7
+ 701 0129 53000000 		.4byte	.LASF26
+ 702 012d 01       		.byte	0x1
+ 703 012e 16       		.byte	0x16
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 18
+
+
+ 704 012f 81000000 		.4byte	0x81
+ 705 0133 07       		.byte	0x7
+ 706 0134 07       		.uleb128 0x7
+ 707 0135 10000000 		.4byte	.LASF27
+ 708 0139 01       		.byte	0x1
+ 709 013a 17       		.byte	0x17
+ 710 013b 81000000 		.4byte	0x81
+ 711 013f 08       		.byte	0x8
+ 712 0140 00       		.byte	0
+ 713 0141 06       		.uleb128 0x6
+ 714 0142 66030000 		.4byte	.LASF29
+ 715 0146 06       		.byte	0x6
+ 716 0147 01       		.byte	0x1
+ 717 0148 1C       		.byte	0x1c
+ 718 0149 7D010000 		.4byte	0x17d
+ 719 014d 07       		.uleb128 0x7
+ 720 014e 53000000 		.4byte	.LASF26
+ 721 0152 01       		.byte	0x1
+ 722 0153 1D       		.byte	0x1d
+ 723 0154 81000000 		.4byte	0x81
+ 724 0158 00       		.byte	0
+ 725 0159 08       		.uleb128 0x8
+ 726 015a 6D7300   		.ascii	"ms\000"
+ 727 015d 01       		.byte	0x1
+ 728 015e 1E       		.byte	0x1e
+ 729 015f 8D000000 		.4byte	0x8d
+ 730 0163 02       		.byte	0x2
+ 731 0164 07       		.uleb128 0x7
+ 732 0165 B1020000 		.4byte	.LASF30
+ 733 0169 01       		.byte	0x1
+ 734 016a 1F       		.byte	0x1f
+ 735 016b 81000000 		.4byte	0x81
+ 736 016f 04       		.byte	0x4
+ 737 0170 07       		.uleb128 0x7
+ 738 0171 03010000 		.4byte	.LASF31
+ 739 0175 01       		.byte	0x1
+ 740 0176 20       		.byte	0x20
+ 741 0177 81000000 		.4byte	0x81
+ 742 017b 05       		.byte	0x5
+ 743 017c 00       		.byte	0
+ 744 017d 06       		.uleb128 0x6
+ 745 017e 7E020000 		.4byte	.LASF32
+ 746 0182 10       		.byte	0x10
+ 747 0183 01       		.byte	0x1
+ 748 0184 25       		.byte	0x25
+ 749 0185 E9010000 		.4byte	0x1e9
+ 750 0189 08       		.uleb128 0x8
+ 751 018a 41444300 		.ascii	"ADC\000"
+ 752 018e 01       		.byte	0x1
+ 753 018f 26       		.byte	0x26
+ 754 0190 8D000000 		.4byte	0x8d
+ 755 0194 00       		.byte	0
+ 756 0195 08       		.uleb128 0x8
+ 757 0196 6D7600   		.ascii	"mv\000"
+ 758 0199 01       		.byte	0x1
+ 759 019a 27       		.byte	0x27
+ 760 019b 8D000000 		.4byte	0x8d
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 19
+
+
+ 761 019f 02       		.byte	0x2
+ 762 01a0 07       		.uleb128 0x7
+ 763 01a1 FB010000 		.4byte	.LASF19
+ 764 01a5 01       		.byte	0x1
+ 765 01a6 28       		.byte	0x28
+ 766 01a7 8D000000 		.4byte	0x8d
+ 767 01ab 04       		.byte	0x4
+ 768 01ac 07       		.uleb128 0x7
+ 769 01ad 01020000 		.4byte	.LASF20
+ 770 01b1 01       		.byte	0x1
+ 771 01b2 29       		.byte	0x29
+ 772 01b3 8D000000 		.4byte	0x8d
+ 773 01b7 06       		.byte	0x6
+ 774 01b8 07       		.uleb128 0x7
+ 775 01b9 07020000 		.4byte	.LASF21
+ 776 01bd 01       		.byte	0x1
+ 777 01be 2A       		.byte	0x2a
+ 778 01bf 8D000000 		.4byte	0x8d
+ 779 01c3 08       		.byte	0x8
+ 780 01c4 07       		.uleb128 0x7
+ 781 01c5 0D020000 		.4byte	.LASF22
+ 782 01c9 01       		.byte	0x1
+ 783 01ca 2B       		.byte	0x2b
+ 784 01cb 8D000000 		.4byte	0x8d
+ 785 01cf 0A       		.byte	0xa
+ 786 01d0 07       		.uleb128 0x7
+ 787 01d1 13020000 		.4byte	.LASF23
+ 788 01d5 01       		.byte	0x1
+ 789 01d6 2C       		.byte	0x2c
+ 790 01d7 8D000000 		.4byte	0x8d
+ 791 01db 0C       		.byte	0xc
+ 792 01dc 07       		.uleb128 0x7
+ 793 01dd A3000000 		.4byte	.LASF25
+ 794 01e1 01       		.byte	0x1
+ 795 01e2 2D       		.byte	0x2d
+ 796 01e3 8D000000 		.4byte	0x8d
+ 797 01e7 0E       		.byte	0xe
+ 798 01e8 00       		.byte	0
+ 799 01e9 09       		.uleb128 0x9
+ 800 01ea 4D7300   		.ascii	"Ms\000"
+ 801 01ed 01       		.byte	0x1
+ 802 01ee 9D       		.byte	0x9d
+ 803 01ef 00000000 		.4byte	.LFB64
+ 804 01f3 0C000000 		.4byte	.LFE64-.LFB64
+ 805 01f7 01       		.uleb128 0x1
+ 806 01f8 9C       		.byte	0x9c
+ 807 01f9 0A       		.uleb128 0xa
+ 808 01fa 75020000 		.4byte	.LASF33
+ 809 01fe 01       		.byte	0x1
+ 810 01ff A3       		.byte	0xa3
+ 811 0200 00000000 		.4byte	.LFB65
+ 812 0204 0C000000 		.4byte	.LFE65-.LFB65
+ 813 0208 01       		.uleb128 0x1
+ 814 0209 9C       		.byte	0x9c
+ 815 020a 0A       		.uleb128 0xa
+ 816 020b B6020000 		.4byte	.LASF34
+ 817 020f 01       		.byte	0x1
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 20
+
+
+ 818 0210 A9       		.byte	0xa9
+ 819 0211 00000000 		.4byte	.LFB66
+ 820 0215 02000000 		.4byte	.LFE66-.LFB66
+ 821 0219 01       		.uleb128 0x1
+ 822 021a 9C       		.byte	0x9c
+ 823 021b 0B       		.uleb128 0xb
+ 824 021c 5B000000 		.4byte	.LASF63
+ 825 0220 01       		.byte	0x1
+ 826 0221 36       		.byte	0x36
+ 827 0222 68000000 		.4byte	0x68
+ 828 0226 00000000 		.4byte	.LFB63
+ 829 022a D8020000 		.4byte	.LFE63-.LFB63
+ 830 022e 01       		.uleb128 0x1
+ 831 022f 9C       		.byte	0x9c
+ 832 0230 89040000 		.4byte	0x489
+ 833 0234 0C       		.uleb128 0xc
+ 834 0235 08000000 		.4byte	.LVL0
+ 835 0239 CD040000 		.4byte	0x4cd
+ 836 023d 0C       		.uleb128 0xc
+ 837 023e 0C000000 		.4byte	.LVL1
+ 838 0242 D8040000 		.4byte	0x4d8
+ 839 0246 0C       		.uleb128 0xc
+ 840 0247 10000000 		.4byte	.LVL2
+ 841 024b E3040000 		.4byte	0x4e3
+ 842 024f 0C       		.uleb128 0xc
+ 843 0250 14000000 		.4byte	.LVL3
+ 844 0254 EE040000 		.4byte	0x4ee
+ 845 0258 0C       		.uleb128 0xc
+ 846 0259 18000000 		.4byte	.LVL4
+ 847 025d F9040000 		.4byte	0x4f9
+ 848 0261 0C       		.uleb128 0xc
+ 849 0262 1C000000 		.4byte	.LVL5
+ 850 0266 04050000 		.4byte	0x504
+ 851 026a 0C       		.uleb128 0xc
+ 852 026b 20000000 		.4byte	.LVL6
+ 853 026f 0F050000 		.4byte	0x50f
+ 854 0273 0C       		.uleb128 0xc
+ 855 0274 24000000 		.4byte	.LVL7
+ 856 0278 1A050000 		.4byte	0x51a
+ 857 027c 0D       		.uleb128 0xd
+ 858 027d 2A000000 		.4byte	.LVL8
+ 859 0281 25050000 		.4byte	0x525
+ 860 0285 93020000 		.4byte	0x293
+ 861 0289 0E       		.uleb128 0xe
+ 862 028a 01       		.uleb128 0x1
+ 863 028b 50       		.byte	0x50
+ 864 028c 05       		.uleb128 0x5
+ 865 028d 03       		.byte	0x3
+ 866 028e 00000000 		.4byte	Serial
+ 867 0292 00       		.byte	0
+ 868 0293 0D       		.uleb128 0xd
+ 869 0294 30000000 		.4byte	.LVL9
+ 870 0298 30050000 		.4byte	0x530
+ 871 029c AA020000 		.4byte	0x2aa
+ 872 02a0 0E       		.uleb128 0xe
+ 873 02a1 01       		.uleb128 0x1
+ 874 02a2 50       		.byte	0x50
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 21
+
+
+ 875 02a3 05       		.uleb128 0x5
+ 876 02a4 03       		.byte	0x3
+ 877 02a5 00000000 		.4byte	Ms
+ 878 02a9 00       		.byte	0
+ 879 02aa 0D       		.uleb128 0xd
+ 880 02ab 36000000 		.4byte	.LVL10
+ 881 02af 3B050000 		.4byte	0x53b
+ 882 02b3 C1020000 		.4byte	0x2c1
+ 883 02b7 0E       		.uleb128 0xe
+ 884 02b8 01       		.uleb128 0x1
+ 885 02b9 50       		.byte	0x50
+ 886 02ba 05       		.uleb128 0x5
+ 887 02bb 03       		.byte	0x3
+ 888 02bc 00000000 		.4byte	Medicion
+ 889 02c0 00       		.byte	0
+ 890 02c1 0C       		.uleb128 0xc
+ 891 02c2 88000000 		.4byte	.LVL11
+ 892 02c6 46050000 		.4byte	0x546
+ 893 02ca 0D       		.uleb128 0xd
+ 894 02cb 8E000000 		.4byte	.LVL12
+ 895 02cf 51050000 		.4byte	0x551
+ 896 02d3 DD020000 		.4byte	0x2dd
+ 897 02d7 0E       		.uleb128 0xe
+ 898 02d8 01       		.uleb128 0x1
+ 899 02d9 50       		.byte	0x50
+ 900 02da 01       		.uleb128 0x1
+ 901 02db 30       		.byte	0x30
+ 902 02dc 00       		.byte	0
+ 903 02dd 0C       		.uleb128 0xc
+ 904 02de 92000000 		.4byte	.LVL13
+ 905 02e2 5C050000 		.4byte	0x55c
+ 906 02e6 0C       		.uleb128 0xc
+ 907 02e7 D2000000 		.4byte	.LVL14
+ 908 02eb 67050000 		.4byte	0x567
+ 909 02ef 0C       		.uleb128 0xc
+ 910 02f0 F2000000 		.4byte	.LVL15
+ 911 02f4 67050000 		.4byte	0x567
+ 912 02f8 0C       		.uleb128 0xc
+ 913 02f9 10010000 		.4byte	.LVL16
+ 914 02fd 67050000 		.4byte	0x567
+ 915 0301 0C       		.uleb128 0xc
+ 916 0302 28010000 		.4byte	.LVL17
+ 917 0306 67050000 		.4byte	0x567
+ 918 030a 0D       		.uleb128 0xd
+ 919 030b 2E010000 		.4byte	.LVL18
+ 920 030f 72050000 		.4byte	0x572
+ 921 0313 1E030000 		.4byte	0x31e
+ 922 0317 0E       		.uleb128 0xe
+ 923 0318 01       		.uleb128 0x1
+ 924 0319 50       		.byte	0x50
+ 925 031a 02       		.uleb128 0x2
+ 926 031b 08       		.byte	0x8
+ 927 031c 20       		.byte	0x20
+ 928 031d 00       		.byte	0
+ 929 031e 0D       		.uleb128 0xd
+ 930 031f D6010000 		.4byte	.LVL19
+ 931 0323 7D050000 		.4byte	0x57d
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 22
+
+
+ 932 0327 31030000 		.4byte	0x331
+ 933 032b 0E       		.uleb128 0xe
+ 934 032c 01       		.uleb128 0x1
+ 935 032d 50       		.byte	0x50
+ 936 032e 01       		.uleb128 0x1
+ 937 032f 31       		.byte	0x31
+ 938 0330 00       		.byte	0
+ 939 0331 0D       		.uleb128 0xd
+ 940 0332 DE010000 		.4byte	.LVL20
+ 941 0336 88050000 		.4byte	0x588
+ 942 033a 49030000 		.4byte	0x349
+ 943 033e 0E       		.uleb128 0xe
+ 944 033f 01       		.uleb128 0x1
+ 945 0340 50       		.byte	0x50
+ 946 0341 01       		.uleb128 0x1
+ 947 0342 30       		.byte	0x30
+ 948 0343 0E       		.uleb128 0xe
+ 949 0344 01       		.uleb128 0x1
+ 950 0345 51       		.byte	0x51
+ 951 0346 01       		.uleb128 0x1
+ 952 0347 30       		.byte	0x30
+ 953 0348 00       		.byte	0
+ 954 0349 0D       		.uleb128 0xd
+ 955 034a E4010000 		.4byte	.LVL21
+ 956 034e 93050000 		.4byte	0x593
+ 957 0352 60030000 		.4byte	0x360
+ 958 0356 0E       		.uleb128 0xe
+ 959 0357 01       		.uleb128 0x1
+ 960 0358 50       		.byte	0x50
+ 961 0359 05       		.uleb128 0x5
+ 962 035a 03       		.byte	0x3
+ 963 035b 00000000 		.4byte	.LC0
+ 964 035f 00       		.byte	0
+ 965 0360 0C       		.uleb128 0xc
+ 966 0361 EC010000 		.4byte	.LVL22
+ 967 0365 9E050000 		.4byte	0x59e
+ 968 0369 0D       		.uleb128 0xd
+ 969 036a F2010000 		.4byte	.LVL23
+ 970 036e 93050000 		.4byte	0x593
+ 971 0372 80030000 		.4byte	0x380
+ 972 0376 0E       		.uleb128 0xe
+ 973 0377 01       		.uleb128 0x1
+ 974 0378 50       		.byte	0x50
+ 975 0379 05       		.uleb128 0x5
+ 976 037a 03       		.byte	0x3
+ 977 037b 10000000 		.4byte	.LC1
+ 978 037f 00       		.byte	0
+ 979 0380 0D       		.uleb128 0xd
+ 980 0381 FA010000 		.4byte	.LVL24
+ 981 0385 88050000 		.4byte	0x588
+ 982 0389 98030000 		.4byte	0x398
+ 983 038d 0E       		.uleb128 0xe
+ 984 038e 01       		.uleb128 0x1
+ 985 038f 50       		.byte	0x50
+ 986 0390 01       		.uleb128 0x1
+ 987 0391 31       		.byte	0x31
+ 988 0392 0E       		.uleb128 0xe
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 23
+
+
+ 989 0393 01       		.uleb128 0x1
+ 990 0394 51       		.byte	0x51
+ 991 0395 01       		.uleb128 0x1
+ 992 0396 30       		.byte	0x30
+ 993 0397 00       		.byte	0
+ 994 0398 0D       		.uleb128 0xd
+ 995 0399 00020000 		.4byte	.LVL25
+ 996 039d 93050000 		.4byte	0x593
+ 997 03a1 AF030000 		.4byte	0x3af
+ 998 03a5 0E       		.uleb128 0xe
+ 999 03a6 01       		.uleb128 0x1
+ 1000 03a7 50       		.byte	0x50
+ 1001 03a8 05       		.uleb128 0x5
+ 1002 03a9 03       		.byte	0x3
+ 1003 03aa 18000000 		.4byte	.LC2
+ 1004 03ae 00       		.byte	0
+ 1005 03af 0C       		.uleb128 0xc
+ 1006 03b0 0E020000 		.4byte	.LVL26
+ 1007 03b4 9E050000 		.4byte	0x59e
+ 1008 03b8 0D       		.uleb128 0xd
+ 1009 03b9 14020000 		.4byte	.LVL27
+ 1010 03bd A9050000 		.4byte	0x5a9
+ 1011 03c1 CC030000 		.4byte	0x3cc
+ 1012 03c5 0E       		.uleb128 0xe
+ 1013 03c6 01       		.uleb128 0x1
+ 1014 03c7 50       		.byte	0x50
+ 1015 03c8 02       		.uleb128 0x2
+ 1016 03c9 08       		.byte	0x8
+ 1017 03ca 2E       		.byte	0x2e
+ 1018 03cb 00       		.byte	0
+ 1019 03cc 0C       		.uleb128 0xc
+ 1020 03cd 42020000 		.4byte	.LVL28
+ 1021 03d1 9E050000 		.4byte	0x59e
+ 1022 03d5 0D       		.uleb128 0xd
+ 1023 03d6 48020000 		.4byte	.LVL29
+ 1024 03da 93050000 		.4byte	0x593
+ 1025 03de EC030000 		.4byte	0x3ec
+ 1026 03e2 0E       		.uleb128 0xe
+ 1027 03e3 01       		.uleb128 0x1
+ 1028 03e4 50       		.byte	0x50
+ 1029 03e5 05       		.uleb128 0x5
+ 1030 03e6 03       		.byte	0x3
+ 1031 03e7 24000000 		.4byte	.LC3
+ 1032 03eb 00       		.byte	0
+ 1033 03ec 0D       		.uleb128 0xd
+ 1034 03ed 50020000 		.4byte	.LVL30
+ 1035 03f1 7D050000 		.4byte	0x57d
+ 1036 03f5 FF030000 		.4byte	0x3ff
+ 1037 03f9 0E       		.uleb128 0xe
+ 1038 03fa 01       		.uleb128 0x1
+ 1039 03fb 50       		.byte	0x50
+ 1040 03fc 01       		.uleb128 0x1
+ 1041 03fd 31       		.byte	0x31
+ 1042 03fe 00       		.byte	0
+ 1043 03ff 0D       		.uleb128 0xd
+ 1044 0400 58020000 		.4byte	.LVL31
+ 1045 0404 88050000 		.4byte	0x588
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 24
+
+
+ 1046 0408 17040000 		.4byte	0x417
+ 1047 040c 0E       		.uleb128 0xe
+ 1048 040d 01       		.uleb128 0x1
+ 1049 040e 50       		.byte	0x50
+ 1050 040f 01       		.uleb128 0x1
+ 1051 0410 30       		.byte	0x30
+ 1052 0411 0E       		.uleb128 0xe
+ 1053 0412 01       		.uleb128 0x1
+ 1054 0413 51       		.byte	0x51
+ 1055 0414 01       		.uleb128 0x1
+ 1056 0415 30       		.byte	0x30
+ 1057 0416 00       		.byte	0
+ 1058 0417 0D       		.uleb128 0xd
+ 1059 0418 5E020000 		.4byte	.LVL32
+ 1060 041c 93050000 		.4byte	0x593
+ 1061 0420 2E040000 		.4byte	0x42e
+ 1062 0424 0E       		.uleb128 0xe
+ 1063 0425 01       		.uleb128 0x1
+ 1064 0426 50       		.byte	0x50
+ 1065 0427 05       		.uleb128 0x5
+ 1066 0428 03       		.byte	0x3
+ 1067 0429 28000000 		.4byte	.LC4
+ 1068 042d 00       		.byte	0
+ 1069 042e 0D       		.uleb128 0xd
+ 1070 042f 66020000 		.4byte	.LVL33
+ 1071 0433 88050000 		.4byte	0x588
+ 1072 0437 46040000 		.4byte	0x446
+ 1073 043b 0E       		.uleb128 0xe
+ 1074 043c 01       		.uleb128 0x1
+ 1075 043d 50       		.byte	0x50
+ 1076 043e 01       		.uleb128 0x1
+ 1077 043f 31       		.byte	0x31
+ 1078 0440 0E       		.uleb128 0xe
+ 1079 0441 01       		.uleb128 0x1
+ 1080 0442 51       		.byte	0x51
+ 1081 0443 01       		.uleb128 0x1
+ 1082 0444 30       		.byte	0x30
+ 1083 0445 00       		.byte	0
+ 1084 0446 0D       		.uleb128 0xd
+ 1085 0447 6C020000 		.4byte	.LVL34
+ 1086 044b 93050000 		.4byte	0x593
+ 1087 044f 5D040000 		.4byte	0x45d
+ 1088 0453 0E       		.uleb128 0xe
+ 1089 0454 01       		.uleb128 0x1
+ 1090 0455 50       		.byte	0x50
+ 1091 0456 05       		.uleb128 0x5
+ 1092 0457 03       		.byte	0x3
+ 1093 0458 3C000000 		.4byte	.LC5
+ 1094 045c 00       		.byte	0
+ 1095 045d 0D       		.uleb128 0xd
+ 1096 045e 74020000 		.4byte	.LVL35
+ 1097 0462 88050000 		.4byte	0x588
+ 1098 0466 75040000 		.4byte	0x475
+ 1099 046a 0E       		.uleb128 0xe
+ 1100 046b 01       		.uleb128 0x1
+ 1101 046c 50       		.byte	0x50
+ 1102 046d 01       		.uleb128 0x1
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 25
+
+
+ 1103 046e 32       		.byte	0x32
+ 1104 046f 0E       		.uleb128 0xe
+ 1105 0470 01       		.uleb128 0x1
+ 1106 0471 51       		.byte	0x51
+ 1107 0472 01       		.uleb128 0x1
+ 1108 0473 30       		.byte	0x30
+ 1109 0474 00       		.byte	0
+ 1110 0475 0F       		.uleb128 0xf
+ 1111 0476 7A020000 		.4byte	.LVL36
+ 1112 047a 93050000 		.4byte	0x593
+ 1113 047e 0E       		.uleb128 0xe
+ 1114 047f 01       		.uleb128 0x1
+ 1115 0480 50       		.byte	0x50
+ 1116 0481 05       		.uleb128 0x5
+ 1117 0482 03       		.byte	0x3
+ 1118 0483 4C000000 		.4byte	.LC6
+ 1119 0487 00       		.byte	0
+ 1120 0488 00       		.byte	0
+ 1121 0489 10       		.uleb128 0x10
+ 1122 048a CB020000 		.4byte	.LASF35
+ 1123 048e 05       		.byte	0x5
+ 1124 048f 1207     		.2byte	0x712
+ 1125 0491 95040000 		.4byte	0x495
+ 1126 0495 11       		.uleb128 0x11
+ 1127 0496 76000000 		.4byte	0x76
+ 1128 049a 12       		.uleb128 0x12
+ 1129 049b B1000000 		.4byte	.LASF36
+ 1130 049f 01       		.byte	0x1
+ 1131 04a0 1A       		.byte	0x1a
+ 1132 04a1 C8000000 		.4byte	0xc8
+ 1133 04a5 05       		.uleb128 0x5
+ 1134 04a6 03       		.byte	0x3
+ 1135 04a7 00000000 		.4byte	pulso
+ 1136 04ab 12       		.uleb128 0x12
+ 1137 04ac 1F020000 		.4byte	.LASF37
+ 1138 04b0 01       		.byte	0x1
+ 1139 04b1 23       		.byte	0x23
+ 1140 04b2 41010000 		.4byte	0x141
+ 1141 04b6 05       		.uleb128 0x5
+ 1142 04b7 03       		.byte	0x3
+ 1143 04b8 00000000 		.4byte	tiempo
+ 1144 04bc 12       		.uleb128 0x12
+ 1145 04bd 60000000 		.4byte	.LASF38
+ 1146 04c1 01       		.byte	0x1
+ 1147 04c2 30       		.byte	0x30
+ 1148 04c3 7D010000 		.4byte	0x17d
+ 1149 04c7 05       		.uleb128 0x5
+ 1150 04c8 03       		.byte	0x3
+ 1151 04c9 00000000 		.4byte	voltaje
+ 1152 04cd 13       		.uleb128 0x13
+ 1153 04ce BD020000 		.4byte	.LASF39
+ 1154 04d2 BD020000 		.4byte	.LASF39
+ 1155 04d6 06       		.byte	0x6
+ 1156 04d7 33       		.byte	0x33
+ 1157 04d8 13       		.uleb128 0x13
+ 1158 04d9 09010000 		.4byte	.LASF40
+ 1159 04dd 09010000 		.4byte	.LASF40
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 26
+
+
+ 1160 04e1 07       		.byte	0x7
+ 1161 04e2 33       		.byte	0x33
+ 1162 04e3 13       		.uleb128 0x13
+ 1163 04e4 90020000 		.4byte	.LASF41
+ 1164 04e8 90020000 		.4byte	.LASF41
+ 1165 04ec 08       		.byte	0x8
+ 1166 04ed 3E       		.byte	0x3e
+ 1167 04ee 13       		.uleb128 0x13
+ 1168 04ef 5C010000 		.4byte	.LASF42
+ 1169 04f3 5C010000 		.4byte	.LASF42
+ 1170 04f7 09       		.byte	0x9
+ 1171 04f8 3F       		.byte	0x3f
+ 1172 04f9 13       		.uleb128 0x13
+ 1173 04fa F0000000 		.4byte	.LASF43
+ 1174 04fe F0000000 		.4byte	.LASF43
+ 1175 0502 0A       		.byte	0xa
+ 1176 0503 34       		.byte	0x34
+ 1177 0504 13       		.uleb128 0x13
+ 1178 0505 98000000 		.4byte	.LASF44
+ 1179 0509 98000000 		.4byte	.LASF44
+ 1180 050d 0B       		.byte	0xb
+ 1181 050e 54       		.byte	0x54
+ 1182 050f 13       		.uleb128 0x13
+ 1183 0510 26020000 		.4byte	.LASF45
+ 1184 0514 26020000 		.4byte	.LASF45
+ 1185 0518 0C       		.byte	0xc
+ 1186 0519 4F       		.byte	0x4f
+ 1187 051a 13       		.uleb128 0x13
+ 1188 051b 9A020000 		.4byte	.LASF46
+ 1189 051f 9A020000 		.4byte	.LASF46
+ 1190 0523 0D       		.byte	0xd
+ 1191 0524 38       		.byte	0x38
+ 1192 0525 13       		.uleb128 0x13
+ 1193 0526 15000000 		.4byte	.LASF47
+ 1194 052a 15000000 		.4byte	.LASF47
+ 1195 052e 0E       		.byte	0xe
+ 1196 052f 18       		.byte	0x18
+ 1197 0530 13       		.uleb128 0x13
+ 1198 0531 68000000 		.4byte	.LASF48
+ 1199 0535 68000000 		.4byte	.LASF48
+ 1200 0539 0F       		.byte	0xf
+ 1201 053a 18       		.byte	0x18
+ 1202 053b 13       		.uleb128 0x13
+ 1203 053c B7000000 		.4byte	.LASF49
+ 1204 0540 B7000000 		.4byte	.LASF49
+ 1205 0544 10       		.byte	0x10
+ 1206 0545 18       		.byte	0x18
+ 1207 0546 13       		.uleb128 0x13
+ 1208 0547 CB000000 		.4byte	.LASF50
+ 1209 054b CB000000 		.4byte	.LASF50
+ 1210 054f 0A       		.byte	0xa
+ 1211 0550 D1       		.byte	0xd1
+ 1212 0551 13       		.uleb128 0x13
+ 1213 0552 7D000000 		.4byte	.LASF51
+ 1214 0556 7D000000 		.4byte	.LASF51
+ 1215 055a 0A       		.byte	0xa
+ 1216 055b 39       		.byte	0x39
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 27
+
+
+ 1217 055c 13       		.uleb128 0x13
+ 1218 055d 00000000 		.4byte	.LASF52
+ 1219 0561 00000000 		.4byte	.LASF52
+ 1220 0565 0A       		.byte	0xa
+ 1221 0566 3B       		.byte	0x3b
+ 1222 0567 13       		.uleb128 0x13
+ 1223 0568 6D030000 		.4byte	.LASF53
+ 1224 056c 6D030000 		.4byte	.LASF53
+ 1225 0570 0B       		.byte	0xb
+ 1226 0571 8A       		.byte	0x8a
+ 1227 0572 13       		.uleb128 0x13
+ 1228 0573 43020000 		.4byte	.LASF54
+ 1229 0577 43020000 		.4byte	.LASF54
+ 1230 057b 0B       		.byte	0xb
+ 1231 057c 8E       		.byte	0x8e
+ 1232 057d 13       		.uleb128 0x13
+ 1233 057e 2F000000 		.4byte	.LASF55
+ 1234 0582 2F000000 		.4byte	.LASF55
+ 1235 0586 0D       		.byte	0xd
+ 1236 0587 3A       		.byte	0x3a
+ 1237 0588 13       		.uleb128 0x13
+ 1238 0589 A4020000 		.4byte	.LASF56
+ 1239 058d A4020000 		.4byte	.LASF56
+ 1240 0591 0D       		.byte	0xd
+ 1241 0592 3D       		.byte	0x3d
+ 1242 0593 13       		.uleb128 0x13
+ 1243 0594 74010000 		.4byte	.LASF57
+ 1244 0598 74010000 		.4byte	.LASF57
+ 1245 059c 0D       		.byte	0xd
+ 1246 059d 3C       		.byte	0x3c
+ 1247 059e 13       		.uleb128 0x13
+ 1248 059f A2010000 		.4byte	.LASF58
+ 1249 05a3 A2010000 		.4byte	.LASF58
+ 1250 05a7 0D       		.byte	0xd
+ 1251 05a8 61       		.byte	0x61
+ 1252 05a9 13       		.uleb128 0x13
+ 1253 05aa 69020000 		.4byte	.LASF59
+ 1254 05ae 69020000 		.4byte	.LASF59
+ 1255 05b2 0D       		.byte	0xd
+ 1256 05b3 3E       		.byte	0x3e
+ 1257 05b4 00       		.byte	0
+ 1258              		.section	.debug_abbrev,"",%progbits
+ 1259              	.Ldebug_abbrev0:
+ 1260 0000 01       		.uleb128 0x1
+ 1261 0001 11       		.uleb128 0x11
+ 1262 0002 01       		.byte	0x1
+ 1263 0003 25       		.uleb128 0x25
+ 1264 0004 0E       		.uleb128 0xe
+ 1265 0005 13       		.uleb128 0x13
+ 1266 0006 0B       		.uleb128 0xb
+ 1267 0007 03       		.uleb128 0x3
+ 1268 0008 0E       		.uleb128 0xe
+ 1269 0009 1B       		.uleb128 0x1b
+ 1270 000a 0E       		.uleb128 0xe
+ 1271 000b 55       		.uleb128 0x55
+ 1272 000c 17       		.uleb128 0x17
+ 1273 000d 11       		.uleb128 0x11
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 28
+
+
+ 1274 000e 01       		.uleb128 0x1
+ 1275 000f 10       		.uleb128 0x10
+ 1276 0010 17       		.uleb128 0x17
+ 1277 0011 00       		.byte	0
+ 1278 0012 00       		.byte	0
+ 1279 0013 02       		.uleb128 0x2
+ 1280 0014 24       		.uleb128 0x24
+ 1281 0015 00       		.byte	0
+ 1282 0016 0B       		.uleb128 0xb
+ 1283 0017 0B       		.uleb128 0xb
+ 1284 0018 3E       		.uleb128 0x3e
+ 1285 0019 0B       		.uleb128 0xb
+ 1286 001a 03       		.uleb128 0x3
+ 1287 001b 0E       		.uleb128 0xe
+ 1288 001c 00       		.byte	0
+ 1289 001d 00       		.byte	0
+ 1290 001e 03       		.uleb128 0x3
+ 1291 001f 16       		.uleb128 0x16
+ 1292 0020 00       		.byte	0
+ 1293 0021 03       		.uleb128 0x3
+ 1294 0022 0E       		.uleb128 0xe
+ 1295 0023 3A       		.uleb128 0x3a
+ 1296 0024 0B       		.uleb128 0xb
+ 1297 0025 3B       		.uleb128 0x3b
+ 1298 0026 0B       		.uleb128 0xb
+ 1299 0027 49       		.uleb128 0x49
+ 1300 0028 13       		.uleb128 0x13
+ 1301 0029 00       		.byte	0
+ 1302 002a 00       		.byte	0
+ 1303 002b 04       		.uleb128 0x4
+ 1304 002c 24       		.uleb128 0x24
+ 1305 002d 00       		.byte	0
+ 1306 002e 0B       		.uleb128 0xb
+ 1307 002f 0B       		.uleb128 0xb
+ 1308 0030 3E       		.uleb128 0x3e
+ 1309 0031 0B       		.uleb128 0xb
+ 1310 0032 03       		.uleb128 0x3
+ 1311 0033 08       		.uleb128 0x8
+ 1312 0034 00       		.byte	0
+ 1313 0035 00       		.byte	0
+ 1314 0036 05       		.uleb128 0x5
+ 1315 0037 16       		.uleb128 0x16
+ 1316 0038 00       		.byte	0
+ 1317 0039 03       		.uleb128 0x3
+ 1318 003a 0E       		.uleb128 0xe
+ 1319 003b 3A       		.uleb128 0x3a
+ 1320 003c 0B       		.uleb128 0xb
+ 1321 003d 3B       		.uleb128 0x3b
+ 1322 003e 05       		.uleb128 0x5
+ 1323 003f 49       		.uleb128 0x49
+ 1324 0040 13       		.uleb128 0x13
+ 1325 0041 00       		.byte	0
+ 1326 0042 00       		.byte	0
+ 1327 0043 06       		.uleb128 0x6
+ 1328 0044 13       		.uleb128 0x13
+ 1329 0045 01       		.byte	0x1
+ 1330 0046 03       		.uleb128 0x3
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 29
+
+
+ 1331 0047 0E       		.uleb128 0xe
+ 1332 0048 0B       		.uleb128 0xb
+ 1333 0049 0B       		.uleb128 0xb
+ 1334 004a 3A       		.uleb128 0x3a
+ 1335 004b 0B       		.uleb128 0xb
+ 1336 004c 3B       		.uleb128 0x3b
+ 1337 004d 0B       		.uleb128 0xb
+ 1338 004e 01       		.uleb128 0x1
+ 1339 004f 13       		.uleb128 0x13
+ 1340 0050 00       		.byte	0
+ 1341 0051 00       		.byte	0
+ 1342 0052 07       		.uleb128 0x7
+ 1343 0053 0D       		.uleb128 0xd
+ 1344 0054 00       		.byte	0
+ 1345 0055 03       		.uleb128 0x3
+ 1346 0056 0E       		.uleb128 0xe
+ 1347 0057 3A       		.uleb128 0x3a
+ 1348 0058 0B       		.uleb128 0xb
+ 1349 0059 3B       		.uleb128 0x3b
+ 1350 005a 0B       		.uleb128 0xb
+ 1351 005b 49       		.uleb128 0x49
+ 1352 005c 13       		.uleb128 0x13
+ 1353 005d 38       		.uleb128 0x38
+ 1354 005e 0B       		.uleb128 0xb
+ 1355 005f 00       		.byte	0
+ 1356 0060 00       		.byte	0
+ 1357 0061 08       		.uleb128 0x8
+ 1358 0062 0D       		.uleb128 0xd
+ 1359 0063 00       		.byte	0
+ 1360 0064 03       		.uleb128 0x3
+ 1361 0065 08       		.uleb128 0x8
+ 1362 0066 3A       		.uleb128 0x3a
+ 1363 0067 0B       		.uleb128 0xb
+ 1364 0068 3B       		.uleb128 0x3b
+ 1365 0069 0B       		.uleb128 0xb
+ 1366 006a 49       		.uleb128 0x49
+ 1367 006b 13       		.uleb128 0x13
+ 1368 006c 38       		.uleb128 0x38
+ 1369 006d 0B       		.uleb128 0xb
+ 1370 006e 00       		.byte	0
+ 1371 006f 00       		.byte	0
+ 1372 0070 09       		.uleb128 0x9
+ 1373 0071 2E       		.uleb128 0x2e
+ 1374 0072 00       		.byte	0
+ 1375 0073 3F       		.uleb128 0x3f
+ 1376 0074 19       		.uleb128 0x19
+ 1377 0075 03       		.uleb128 0x3
+ 1378 0076 08       		.uleb128 0x8
+ 1379 0077 3A       		.uleb128 0x3a
+ 1380 0078 0B       		.uleb128 0xb
+ 1381 0079 3B       		.uleb128 0x3b
+ 1382 007a 0B       		.uleb128 0xb
+ 1383 007b 27       		.uleb128 0x27
+ 1384 007c 19       		.uleb128 0x19
+ 1385 007d 11       		.uleb128 0x11
+ 1386 007e 01       		.uleb128 0x1
+ 1387 007f 12       		.uleb128 0x12
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 30
+
+
+ 1388 0080 06       		.uleb128 0x6
+ 1389 0081 40       		.uleb128 0x40
+ 1390 0082 18       		.uleb128 0x18
+ 1391 0083 9742     		.uleb128 0x2117
+ 1392 0085 19       		.uleb128 0x19
+ 1393 0086 00       		.byte	0
+ 1394 0087 00       		.byte	0
+ 1395 0088 0A       		.uleb128 0xa
+ 1396 0089 2E       		.uleb128 0x2e
+ 1397 008a 00       		.byte	0
+ 1398 008b 3F       		.uleb128 0x3f
+ 1399 008c 19       		.uleb128 0x19
+ 1400 008d 03       		.uleb128 0x3
+ 1401 008e 0E       		.uleb128 0xe
+ 1402 008f 3A       		.uleb128 0x3a
+ 1403 0090 0B       		.uleb128 0xb
+ 1404 0091 3B       		.uleb128 0x3b
+ 1405 0092 0B       		.uleb128 0xb
+ 1406 0093 27       		.uleb128 0x27
+ 1407 0094 19       		.uleb128 0x19
+ 1408 0095 11       		.uleb128 0x11
+ 1409 0096 01       		.uleb128 0x1
+ 1410 0097 12       		.uleb128 0x12
+ 1411 0098 06       		.uleb128 0x6
+ 1412 0099 40       		.uleb128 0x40
+ 1413 009a 18       		.uleb128 0x18
+ 1414 009b 9742     		.uleb128 0x2117
+ 1415 009d 19       		.uleb128 0x19
+ 1416 009e 00       		.byte	0
+ 1417 009f 00       		.byte	0
+ 1418 00a0 0B       		.uleb128 0xb
+ 1419 00a1 2E       		.uleb128 0x2e
+ 1420 00a2 01       		.byte	0x1
+ 1421 00a3 3F       		.uleb128 0x3f
+ 1422 00a4 19       		.uleb128 0x19
+ 1423 00a5 03       		.uleb128 0x3
+ 1424 00a6 0E       		.uleb128 0xe
+ 1425 00a7 3A       		.uleb128 0x3a
+ 1426 00a8 0B       		.uleb128 0xb
+ 1427 00a9 3B       		.uleb128 0x3b
+ 1428 00aa 0B       		.uleb128 0xb
+ 1429 00ab 27       		.uleb128 0x27
+ 1430 00ac 19       		.uleb128 0x19
+ 1431 00ad 49       		.uleb128 0x49
+ 1432 00ae 13       		.uleb128 0x13
+ 1433 00af 8701     		.uleb128 0x87
+ 1434 00b1 19       		.uleb128 0x19
+ 1435 00b2 11       		.uleb128 0x11
+ 1436 00b3 01       		.uleb128 0x1
+ 1437 00b4 12       		.uleb128 0x12
+ 1438 00b5 06       		.uleb128 0x6
+ 1439 00b6 40       		.uleb128 0x40
+ 1440 00b7 18       		.uleb128 0x18
+ 1441 00b8 9742     		.uleb128 0x2117
+ 1442 00ba 19       		.uleb128 0x19
+ 1443 00bb 01       		.uleb128 0x1
+ 1444 00bc 13       		.uleb128 0x13
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 31
+
+
+ 1445 00bd 00       		.byte	0
+ 1446 00be 00       		.byte	0
+ 1447 00bf 0C       		.uleb128 0xc
+ 1448 00c0 898201   		.uleb128 0x4109
+ 1449 00c3 00       		.byte	0
+ 1450 00c4 11       		.uleb128 0x11
+ 1451 00c5 01       		.uleb128 0x1
+ 1452 00c6 31       		.uleb128 0x31
+ 1453 00c7 13       		.uleb128 0x13
+ 1454 00c8 00       		.byte	0
+ 1455 00c9 00       		.byte	0
+ 1456 00ca 0D       		.uleb128 0xd
+ 1457 00cb 898201   		.uleb128 0x4109
+ 1458 00ce 01       		.byte	0x1
+ 1459 00cf 11       		.uleb128 0x11
+ 1460 00d0 01       		.uleb128 0x1
+ 1461 00d1 31       		.uleb128 0x31
+ 1462 00d2 13       		.uleb128 0x13
+ 1463 00d3 01       		.uleb128 0x1
+ 1464 00d4 13       		.uleb128 0x13
+ 1465 00d5 00       		.byte	0
+ 1466 00d6 00       		.byte	0
+ 1467 00d7 0E       		.uleb128 0xe
+ 1468 00d8 8A8201   		.uleb128 0x410a
+ 1469 00db 00       		.byte	0
+ 1470 00dc 02       		.uleb128 0x2
+ 1471 00dd 18       		.uleb128 0x18
+ 1472 00de 9142     		.uleb128 0x2111
+ 1473 00e0 18       		.uleb128 0x18
+ 1474 00e1 00       		.byte	0
+ 1475 00e2 00       		.byte	0
+ 1476 00e3 0F       		.uleb128 0xf
+ 1477 00e4 898201   		.uleb128 0x4109
+ 1478 00e7 01       		.byte	0x1
+ 1479 00e8 11       		.uleb128 0x11
+ 1480 00e9 01       		.uleb128 0x1
+ 1481 00ea 31       		.uleb128 0x31
+ 1482 00eb 13       		.uleb128 0x13
+ 1483 00ec 00       		.byte	0
+ 1484 00ed 00       		.byte	0
+ 1485 00ee 10       		.uleb128 0x10
+ 1486 00ef 34       		.uleb128 0x34
+ 1487 00f0 00       		.byte	0
+ 1488 00f1 03       		.uleb128 0x3
+ 1489 00f2 0E       		.uleb128 0xe
+ 1490 00f3 3A       		.uleb128 0x3a
+ 1491 00f4 0B       		.uleb128 0xb
+ 1492 00f5 3B       		.uleb128 0x3b
+ 1493 00f6 05       		.uleb128 0x5
+ 1494 00f7 49       		.uleb128 0x49
+ 1495 00f8 13       		.uleb128 0x13
+ 1496 00f9 3F       		.uleb128 0x3f
+ 1497 00fa 19       		.uleb128 0x19
+ 1498 00fb 3C       		.uleb128 0x3c
+ 1499 00fc 19       		.uleb128 0x19
+ 1500 00fd 00       		.byte	0
+ 1501 00fe 00       		.byte	0
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 32
+
+
+ 1502 00ff 11       		.uleb128 0x11
+ 1503 0100 35       		.uleb128 0x35
+ 1504 0101 00       		.byte	0
+ 1505 0102 49       		.uleb128 0x49
+ 1506 0103 13       		.uleb128 0x13
+ 1507 0104 00       		.byte	0
+ 1508 0105 00       		.byte	0
+ 1509 0106 12       		.uleb128 0x12
+ 1510 0107 34       		.uleb128 0x34
+ 1511 0108 00       		.byte	0
+ 1512 0109 03       		.uleb128 0x3
+ 1513 010a 0E       		.uleb128 0xe
+ 1514 010b 3A       		.uleb128 0x3a
+ 1515 010c 0B       		.uleb128 0xb
+ 1516 010d 3B       		.uleb128 0x3b
+ 1517 010e 0B       		.uleb128 0xb
+ 1518 010f 49       		.uleb128 0x49
+ 1519 0110 13       		.uleb128 0x13
+ 1520 0111 3F       		.uleb128 0x3f
+ 1521 0112 19       		.uleb128 0x19
+ 1522 0113 02       		.uleb128 0x2
+ 1523 0114 18       		.uleb128 0x18
+ 1524 0115 00       		.byte	0
+ 1525 0116 00       		.byte	0
+ 1526 0117 13       		.uleb128 0x13
+ 1527 0118 2E       		.uleb128 0x2e
+ 1528 0119 00       		.byte	0
+ 1529 011a 3F       		.uleb128 0x3f
+ 1530 011b 19       		.uleb128 0x19
+ 1531 011c 3C       		.uleb128 0x3c
+ 1532 011d 19       		.uleb128 0x19
+ 1533 011e 6E       		.uleb128 0x6e
+ 1534 011f 0E       		.uleb128 0xe
+ 1535 0120 03       		.uleb128 0x3
+ 1536 0121 0E       		.uleb128 0xe
+ 1537 0122 3A       		.uleb128 0x3a
+ 1538 0123 0B       		.uleb128 0xb
+ 1539 0124 3B       		.uleb128 0x3b
+ 1540 0125 0B       		.uleb128 0xb
+ 1541 0126 00       		.byte	0
+ 1542 0127 00       		.byte	0
+ 1543 0128 00       		.byte	0
+ 1544              		.section	.debug_aranges,"",%progbits
+ 1545 0000 34000000 		.4byte	0x34
+ 1546 0004 0200     		.2byte	0x2
+ 1547 0006 00000000 		.4byte	.Ldebug_info0
+ 1548 000a 04       		.byte	0x4
+ 1549 000b 00       		.byte	0
+ 1550 000c 0000     		.2byte	0
+ 1551 000e 0000     		.2byte	0
+ 1552 0010 00000000 		.4byte	.LFB64
+ 1553 0014 0C000000 		.4byte	.LFE64-.LFB64
+ 1554 0018 00000000 		.4byte	.LFB65
+ 1555 001c 0C000000 		.4byte	.LFE65-.LFB65
+ 1556 0020 00000000 		.4byte	.LFB66
+ 1557 0024 02000000 		.4byte	.LFE66-.LFB66
+ 1558 0028 00000000 		.4byte	.LFB63
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 33
+
+
+ 1559 002c D8020000 		.4byte	.LFE63-.LFB63
+ 1560 0030 00000000 		.4byte	0
+ 1561 0034 00000000 		.4byte	0
+ 1562              		.section	.debug_ranges,"",%progbits
+ 1563              	.Ldebug_ranges0:
+ 1564 0000 00000000 		.4byte	.LFB64
+ 1565 0004 0C000000 		.4byte	.LFE64
+ 1566 0008 00000000 		.4byte	.LFB65
+ 1567 000c 0C000000 		.4byte	.LFE65
+ 1568 0010 00000000 		.4byte	.LFB66
+ 1569 0014 02000000 		.4byte	.LFE66
+ 1570 0018 00000000 		.4byte	.LFB63
+ 1571 001c D8020000 		.4byte	.LFE63
+ 1572 0020 00000000 		.4byte	0
+ 1573 0024 00000000 		.4byte	0
+ 1574              		.section	.debug_line,"",%progbits
+ 1575              	.Ldebug_line0:
+ 1576 0000 82020000 		.section	.debug_str,"MS",%progbits,1
+ 1576      0200D701 
+ 1576      00000201 
+ 1576      FB0E0D00 
+ 1576      01010101 
+ 1577              	.LASF52:
+ 1578 0000 4144435F 		.ascii	"ADC_GetResult16\000"
+ 1578      47657452 
+ 1578      6573756C 
+ 1578      74313600 
+ 1579              	.LASF27:
+ 1580 0010 6465646F 		.ascii	"dedo\000"
+ 1580      00
+ 1581              	.LASF47:
+ 1582 0015 5258496E 		.ascii	"RXInterrupt_StartEx\000"
+ 1582      74657272 
+ 1582      7570745F 
+ 1582      53746172 
+ 1582      74457800 
+ 1583              	.LASF28:
+ 1584 0029 50756C73 		.ascii	"Pulso\000"
+ 1584      6F00
+ 1585              	.LASF55:
+ 1586 002f 4C43445F 		.ascii	"LCD_WriteControl\000"
+ 1586      57726974 
+ 1586      65436F6E 
+ 1586      74726F6C 
+ 1586      00
+ 1587              	.LASF2:
+ 1588 0040 73686F72 		.ascii	"short int\000"
+ 1588      7420696E 
+ 1588      7400
+ 1589              	.LASF18:
+ 1590 004a 73697A65 		.ascii	"sizetype\000"
+ 1590      74797065 
+ 1590      00
+ 1591              	.LASF26:
+ 1592 0053 62616E64 		.ascii	"bandera\000"
+ 1592      65726100 
+ 1593              	.LASF63:
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 34
+
+
+ 1594 005b 6D61696E 		.ascii	"main\000"
+ 1594      00
+ 1595              	.LASF38:
+ 1596 0060 766F6C74 		.ascii	"voltaje\000"
+ 1596      616A6500 
+ 1597              	.LASF48:
+ 1598 0068 54656D70 		.ascii	"Temporizador_StartEx\000"
+ 1598      6F72697A 
+ 1598      61646F72 
+ 1598      5F537461 
+ 1598      72744578 
+ 1599              	.LASF51:
+ 1600 007d 4144435F 		.ascii	"ADC_IsEndConversion\000"
+ 1600      4973456E 
+ 1600      64436F6E 
+ 1600      76657273 
+ 1600      696F6E00 
+ 1601              	.LASF12:
+ 1602 0091 75696E74 		.ascii	"uint16\000"
+ 1602      313600
+ 1603              	.LASF44:
+ 1604 0098 55415254 		.ascii	"UART_Start\000"
+ 1604      5F537461 
+ 1604      727400
+ 1605              	.LASF25:
+ 1606 00a3 70726F6D 		.ascii	"promedioMovil\000"
+ 1606      6564696F 
+ 1606      4D6F7669 
+ 1606      6C00
+ 1607              	.LASF36:
+ 1608 00b1 70756C73 		.ascii	"pulso\000"
+ 1608      6F00
+ 1609              	.LASF49:
+ 1610 00b7 50756C73 		.ascii	"PulsoSensor_StartEx\000"
+ 1610      6F53656E 
+ 1610      736F725F 
+ 1610      53746172 
+ 1610      74457800 
+ 1611              	.LASF50:
+ 1612 00cb 4144435F 		.ascii	"ADC_StartConvert\000"
+ 1612      53746172 
+ 1612      74436F6E 
+ 1612      76657274 
+ 1612      00
+ 1613              	.LASF14:
+ 1614 00dc 666C6F61 		.ascii	"float\000"
+ 1614      7400
+ 1615              	.LASF6:
+ 1616 00e2 6C6F6E67 		.ascii	"long long int\000"
+ 1616      206C6F6E 
+ 1616      6720696E 
+ 1616      7400
+ 1617              	.LASF43:
+ 1618 00f0 4144435F 		.ascii	"ADC_Start\000"
+ 1618      53746172 
+ 1618      7400
+ 1619              	.LASF4:
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 35
+
+
+ 1620 00fa 6C6F6E67 		.ascii	"long int\000"
+ 1620      20696E74 
+ 1620      00
+ 1621              	.LASF31:
+ 1622 0103 6D733130 		.ascii	"ms100\000"
+ 1622      3000
+ 1623              	.LASF40:
+ 1624 0109 4F70616D 		.ascii	"Opamp_2_Start\000"
+ 1624      705F325F 
+ 1624      53746172 
+ 1624      7400
+ 1625              	.LASF17:
+ 1626 0117 6C6F6E67 		.ascii	"long double\000"
+ 1626      20646F75 
+ 1626      626C6500 
+ 1627              	.LASF1:
+ 1628 0123 756E7369 		.ascii	"unsigned char\000"
+ 1628      676E6564 
+ 1628      20636861 
+ 1628      7200
+ 1629              	.LASF0:
+ 1630 0131 7369676E 		.ascii	"signed char\000"
+ 1630      65642063 
+ 1630      68617200 
+ 1631              	.LASF10:
+ 1632 013d 696E7433 		.ascii	"int32_t\000"
+ 1632      325F7400 
+ 1633              	.LASF7:
+ 1634 0145 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1634      206C6F6E 
+ 1634      6720756E 
+ 1634      7369676E 
+ 1634      65642069 
+ 1635              	.LASF42:
+ 1636 015c 436F6D70 		.ascii	"Comp_Start\000"
+ 1636      5F537461 
+ 1636      727400
+ 1637              	.LASF8:
+ 1638 0167 756E7369 		.ascii	"unsigned int\000"
+ 1638      676E6564 
+ 1638      20696E74 
+ 1638      00
+ 1639              	.LASF57:
+ 1640 0174 4C43445F 		.ascii	"LCD_PrintString\000"
+ 1640      5072696E 
+ 1640      74537472 
+ 1640      696E6700 
+ 1641              	.LASF24:
+ 1642 0184 6461746F 		.ascii	"datoActual\000"
+ 1642      41637475 
+ 1642      616C00
+ 1643              	.LASF3:
+ 1644 018f 73686F72 		.ascii	"short unsigned int\000"
+ 1644      7420756E 
+ 1644      7369676E 
+ 1644      65642069 
+ 1644      6E7400
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 36
+
+
+ 1645              	.LASF58:
+ 1646 01a2 4C43445F 		.ascii	"LCD_PrintU32Number\000"
+ 1646      5072696E 
+ 1646      74553332 
+ 1646      4E756D62 
+ 1646      657200
+ 1647              	.LASF16:
+ 1648 01b5 63686172 		.ascii	"char\000"
+ 1648      00
+ 1649              	.LASF62:
+ 1650 01ba 433A5C55 		.ascii	"C:\\Users\\bioin\\Documents\\PSoC Creator\\Workspac"
+ 1650      73657273 
+ 1650      5C62696F 
+ 1650      696E5C44 
+ 1650      6F63756D 
+ 1651 01e8 6530315C 		.ascii	"e01\\Design01.cydsn\000"
+ 1651      44657369 
+ 1651      676E3031 
+ 1651      2E637964 
+ 1651      736E00
+ 1652              	.LASF19:
+ 1653 01fb 6461746F 		.ascii	"dato1\000"
+ 1653      3100
+ 1654              	.LASF20:
+ 1655 0201 6461746F 		.ascii	"dato2\000"
+ 1655      3200
+ 1656              	.LASF21:
+ 1657 0207 6461746F 		.ascii	"dato3\000"
+ 1657      3300
+ 1658              	.LASF22:
+ 1659 020d 6461746F 		.ascii	"dato4\000"
+ 1659      3400
+ 1660              	.LASF23:
+ 1661 0213 6461746F 		.ascii	"dato5\000"
+ 1661      3500
+ 1662              	.LASF11:
+ 1663 0219 75696E74 		.ascii	"uint8\000"
+ 1663      3800
+ 1664              	.LASF37:
+ 1665 021f 7469656D 		.ascii	"tiempo\000"
+ 1665      706F00
+ 1666              	.LASF45:
+ 1667 0226 436F6E74 		.ascii	"Contador_Start\000"
+ 1667      61646F72 
+ 1667      5F537461 
+ 1667      727400
+ 1668              	.LASF13:
+ 1669 0235 75696E74 		.ascii	"uint32\000"
+ 1669      333200
+ 1670              	.LASF61:
+ 1671 023c 6D61696E 		.ascii	"main.c\000"
+ 1671      2E6300
+ 1672              	.LASF54:
+ 1673 0243 55415254 		.ascii	"UART_PutCRLF\000"
+ 1673      5F507574 
+ 1673      43524C46 
+ 1673      00
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 37
+
+
+ 1674              	.LASF5:
+ 1675 0250 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1675      20756E73 
+ 1675      69676E65 
+ 1675      6420696E 
+ 1675      7400
+ 1676              	.LASF15:
+ 1677 0262 646F7562 		.ascii	"double\000"
+ 1677      6C6500
+ 1678              	.LASF59:
+ 1679 0269 4C43445F 		.ascii	"LCD_PutChar\000"
+ 1679      50757443 
+ 1679      68617200 
+ 1680              	.LASF33:
+ 1681 0275 4D656469 		.ascii	"Medicion\000"
+ 1681      63696F6E 
+ 1681      00
+ 1682              	.LASF32:
+ 1683 027e 566F6C74 		.ascii	"Voltaje\000"
+ 1683      616A6500 
+ 1684              	.LASF9:
+ 1685 0286 5F5F696E 		.ascii	"__int32_t\000"
+ 1685      7433325F 
+ 1685      7400
+ 1686              	.LASF41:
+ 1687 0290 5047415F 		.ascii	"PGA_Start\000"
+ 1687      53746172 
+ 1687      7400
+ 1688              	.LASF46:
+ 1689 029a 4C43445F 		.ascii	"LCD_Start\000"
+ 1689      53746172 
+ 1689      7400
+ 1690              	.LASF56:
+ 1691 02a4 4C43445F 		.ascii	"LCD_Position\000"
+ 1691      506F7369 
+ 1691      74696F6E 
+ 1691      00
+ 1692              	.LASF30:
+ 1693 02b1 6D733130 		.ascii	"ms10\000"
+ 1693      00
+ 1694              	.LASF34:
+ 1695 02b6 53657269 		.ascii	"Serial\000"
+ 1695      616C00
+ 1696              	.LASF39:
+ 1697 02bd 4F70616D 		.ascii	"Opamp_1_Start\000"
+ 1697      705F315F 
+ 1697      53746172 
+ 1697      7400
+ 1698              	.LASF35:
+ 1699 02cb 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 1699      52784275 
+ 1699      66666572 
+ 1699      00
+ 1700              	.LASF60:
+ 1701 02d8 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 1701      43313120 
+ 1701      352E342E 
+ARM GAS  C:\Users\bioin\AppData\Local\Temp\cc4JYU72.s 			page 38
+
+
+ 1701      31203230 
+ 1701      31363036 
+ 1702 030b 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m3 -mthumb -g -O"
+ 1702      20726576 
+ 1702      6973696F 
+ 1702      6E203233 
+ 1702      37373135 
+ 1703 033e 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1703      66756E63 
+ 1703      74696F6E 
+ 1703      2D736563 
+ 1703      74696F6E 
+ 1704              	.LASF29:
+ 1705 0366 5469656D 		.ascii	"Tiempo\000"
+ 1705      706F00
+ 1706              	.LASF53:
+ 1707 036d 55415254 		.ascii	"UART_PutChar\000"
+ 1707      5F507574 
+ 1707      43686172 
+ 1707      00
+ 1708              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

@@ -1,0 +1,1728 @@
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"main.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.ISR_counter,"ax",%progbits
+  20              		.align	2
+  21              		.global	ISR_counter
+  22              		.thumb
+  23              		.thumb_func
+  24              		.type	ISR_counter, %function
+  25              	ISR_counter:
+  26              	.LFB64:
+  27              		.file 1 "main.c"
+   1:main.c        **** /* ========================================
+   2:main.c        ****  *
+   3:main.c        ****  * Copyright YOUR COMPANY, THE YEAR
+   4:main.c        ****  * All Rights Reserved
+   5:main.c        ****  * UNPUBLISHED, LICENSED SOFTWARE.
+   6:main.c        ****  *
+   7:main.c        ****  * CONFIDENTIAL AND PROPRIETARY INFORMATION
+   8:main.c        ****  * WHICH IS THE PROPERTY OF your company.
+   9:main.c        ****  *
+  10:main.c        ****  * ========================================
+  11:main.c        **** */
+  12:main.c        **** #include "project.h"
+  13:main.c        **** CY_ISR_PROTO(ISR_counter);//intrrrup contador
+  14:main.c        **** CY_ISR_PROTO(ISR_Tarado);
+  15:main.c        **** uint16 ban_cont=0;
+  16:main.c        **** uint16 ban_cont1=0;
+  17:main.c        **** uint8 ban_boton=0;
+  18:main.c        **** uint8 ban_neg=0;
+  19:main.c        **** uint16 b=270;//CAMBIAR
+  20:main.c        **** uint16 z=700;//CAMBIAR
+  21:main.c        **** uint16 m=749;//CAMBIAR
+  22:main.c        **** uint16 cont=0;//contador muestras 
+  23:main.c        **** uint32 VADC=0;
+  24:main.c        **** uint32 VADC_prom=0;
+  25:main.c        **** uint32 Peso=0;
+  26:main.c        **** uint32 ReadCount(void);
+  27:main.c        **** 
+  28:main.c        **** int main(void)
+  29:main.c        **** {
+  30:main.c        ****  
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 2
+
+
+  31:main.c        ****     LCD_Start();
+  32:main.c        ****     Counter_Start();
+  33:main.c        ****     isr_timer_StartEx(ISR_counter);
+  34:main.c        ****     isr_Tarado_StartEx(ISR_Tarado);
+  35:main.c        ****     
+  36:main.c        ****     CyGlobalIntEnable; /* Enable global interrupts. */
+  37:main.c        **** 
+  38:main.c        ****     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
+  39:main.c        **** 
+  40:main.c        ****     for(;;)
+  41:main.c        ****     {
+  42:main.c        ****         /* Place your application code here. */
+  43:main.c        ****         if(ban_cont){
+  44:main.c        ****             cont++;//1seg cada 1000 interrupciones
+  45:main.c        ****             //Toma de 20 muestras cada 500ms, 1 muestra cada 25ms
+  46:main.c        ****             if(cont%25==0){
+  47:main.c        ****                 VADC= (uint32)(ReadCount());
+  48:main.c        ****                 VADC_prom+=VADC;
+  49:main.c        ****                 if (cont==500){
+  50:main.c        ****                     VADC_prom/=20; // Promedio de 20 muestras
+  51:main.c        ****                     if(ban_boton){
+  52:main.c        ****                         b=VADC_prom;
+  53:main.c        ****                         ban_boton=0;
+  54:main.c        ****                     }        
+  55:main.c        ****                     if(VADC_prom>=b){
+  56:main.c        ****                         Peso=(uint32)(VADC_prom-b)*700/749;
+  57:main.c        ****                         LCD_Position(2,0);
+  58:main.c        ****                         LCD_PrintString("Peso = ");
+  59:main.c        ****                         LCD_PrintU32Number(Peso);
+  60:main.c        ****               
+  61:main.c        ****                     }
+  62:main.c        ****                     if(VADC_prom<b){
+  63:main.c        ****                         Peso=(uint32)(b-VADC_prom)*700/749;
+  64:main.c        ****                         LCD_Position(2,0);
+  65:main.c        ****                         LCD_PrintString("Peso = -");
+  66:main.c        ****                         LCD_PrintU32Number(Peso); 
+  67:main.c        ****                     }
+  68:main.c        ****                     LCD_Position(0,0);
+  69:main.c        ****                     LCD_PrintString("ADC = ");
+  70:main.c        ****                     LCD_PrintU32Number(VADC_prom);
+  71:main.c        ****                     LCD_ClearDisplay();
+  72:main.c        ****                     VADC=0;
+  73:main.c        ****                     VADC_prom=0;
+  74:main.c        ****                 }
+  75:main.c        ****             }
+  76:main.c        ****         
+  77:main.c        ****         }
+  78:main.c        ****     } 
+  79:main.c        **** }
+  80:main.c        **** CY_ISR(ISR_counter){
+  28              		.loc 1 80 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  81:main.c        ****     ban_cont=1;
+  33              		.loc 1 81 0
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 3
+
+
+  34 0000 0122     		movs	r2, #1
+  35 0002 014B     		ldr	r3, .L2
+  36 0004 1A80     		strh	r2, [r3]	@ movhi
+  37 0006 7047     		bx	lr
+  38              	.L3:
+  39              		.align	2
+  40              	.L2:
+  41 0008 00000000 		.word	.LANCHOR0
+  42              		.cfi_endproc
+  43              	.LFE64:
+  44              		.size	ISR_counter, .-ISR_counter
+  45              		.section	.text.ISR_Tarado,"ax",%progbits
+  46              		.align	2
+  47              		.global	ISR_Tarado
+  48              		.thumb
+  49              		.thumb_func
+  50              		.type	ISR_Tarado, %function
+  51              	ISR_Tarado:
+  52              	.LFB65:
+  82:main.c        **** }
+  83:main.c        **** CY_ISR(ISR_Tarado){
+  53              		.loc 1 83 0
+  54              		.cfi_startproc
+  55              		@ args = 0, pretend = 0, frame = 0
+  56              		@ frame_needed = 0, uses_anonymous_args = 0
+  57              		@ link register save eliminated.
+  84:main.c        ****     ban_boton=1;
+  58              		.loc 1 84 0
+  59 0000 0122     		movs	r2, #1
+  60 0002 014B     		ldr	r3, .L5
+  61 0004 9A70     		strb	r2, [r3, #2]
+  62 0006 7047     		bx	lr
+  63              	.L6:
+  64              		.align	2
+  65              	.L5:
+  66 0008 00000000 		.word	.LANCHOR0
+  67              		.cfi_endproc
+  68              	.LFE65:
+  69              		.size	ISR_Tarado, .-ISR_Tarado
+  70              		.section	.text.ReadCount,"ax",%progbits
+  71              		.align	2
+  72              		.global	ReadCount
+  73              		.thumb
+  74              		.thumb_func
+  75              		.type	ReadCount, %function
+  76              	ReadCount:
+  77              	.LFB66:
+  85:main.c        **** }
+  86:main.c        **** uint32 ReadCount(void){
+  78              		.loc 1 86 0
+  79              		.cfi_startproc
+  80              		@ args = 0, pretend = 0, frame = 0
+  81              		@ frame_needed = 0, uses_anonymous_args = 0
+  82 0000 38B5     		push	{r3, r4, r5, lr}
+  83              		.cfi_def_cfa_offset 16
+  84              		.cfi_offset 3, -16
+  85              		.cfi_offset 4, -12
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 4
+
+
+  86              		.cfi_offset 5, -8
+  87              		.cfi_offset 14, -4
+  87:main.c        ****     uint32 count;
+  88:main.c        ****     ADDO_Write(1);
+  88              		.loc 1 88 0
+  89 0002 0120     		movs	r0, #1
+  90 0004 FFF7FEFF 		bl	ADDO_Write
+  91              	.LVL0:
+  89:main.c        ****     ADSK_Write(0);
+  92              		.loc 1 89 0
+  93 0008 0020     		movs	r0, #0
+  94 000a FFF7FEFF 		bl	ADSK_Write
+  95              	.LVL1:
+  96              	.L8:
+  90:main.c        ****     count=0;
+  91:main.c        ****     while (ADDO_Read()){}
+  97              		.loc 1 91 0 discriminator 1
+  98 000e FFF7FEFF 		bl	ADDO_Read
+  99              	.LVL2:
+ 100 0012 0028     		cmp	r0, #0
+ 101 0014 FBD1     		bne	.L8
+ 102 0016 0024     		movs	r4, #0
+ 103 0018 2546     		mov	r5, r4
+ 104 001a 0CE0     		b	.L9
+ 105              	.LVL3:
+ 106              	.L11:
+ 107              	.LBB2:
+  92:main.c        ****     for(uint8 i=0; i<24; i++){
+  93:main.c        ****         ADSK_Write(1);
+ 108              		.loc 1 93 0
+ 109 001c 0120     		movs	r0, #1
+ 110 001e FFF7FEFF 		bl	ADSK_Write
+ 111              	.LVL4:
+  94:main.c        ****         count=count<<1;
+ 112              		.loc 1 94 0
+ 113 0022 6D00     		lsls	r5, r5, #1
+ 114              	.LVL5:
+  95:main.c        ****         ADSK_Write(0);
+ 115              		.loc 1 95 0
+ 116 0024 0020     		movs	r0, #0
+ 117 0026 FFF7FEFF 		bl	ADSK_Write
+ 118              	.LVL6:
+  96:main.c        ****         if(ADDO_Read())count++;
+ 119              		.loc 1 96 0
+ 120 002a FFF7FEFF 		bl	ADDO_Read
+ 121              	.LVL7:
+ 122 002e 00B1     		cbz	r0, .L10
+ 123              		.loc 1 96 0 is_stmt 0 discriminator 1
+ 124 0030 0135     		adds	r5, r5, #1
+ 125              	.LVL8:
+ 126              	.L10:
+  92:main.c        ****         ADSK_Write(1);
+ 127              		.loc 1 92 0 is_stmt 1 discriminator 2
+ 128 0032 0134     		adds	r4, r4, #1
+ 129              	.LVL9:
+ 130 0034 E4B2     		uxtb	r4, r4
+ 131              	.LVL10:
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 5
+
+
+ 132              	.L9:
+  92:main.c        ****         ADSK_Write(1);
+ 133              		.loc 1 92 0 is_stmt 0 discriminator 1
+ 134 0036 172C     		cmp	r4, #23
+ 135 0038 F0D9     		bls	.L11
+ 136              	.LBE2:
+  97:main.c        ****     }
+  98:main.c        ****       ADSK_Write(1);
+ 137              		.loc 1 98 0 is_stmt 1
+ 138 003a 0120     		movs	r0, #1
+ 139 003c FFF7FEFF 		bl	ADSK_Write
+ 140              	.LVL11:
+  99:main.c        ****       count=count^0x800000;  
+ 141              		.loc 1 99 0
+ 142 0040 85F40005 		eor	r5, r5, #8388608
+ 143              	.LVL12:
+ 100:main.c        ****       ADSK_Write(0); 
+ 144              		.loc 1 100 0
+ 145 0044 0020     		movs	r0, #0
+ 146 0046 FFF7FEFF 		bl	ADSK_Write
+ 147              	.LVL13:
+ 101:main.c        ****       return(count);
+ 102:main.c        **** }
+ 148              		.loc 1 102 0
+ 149 004a 2846     		mov	r0, r5
+ 150 004c 38BD     		pop	{r3, r4, r5, pc}
+ 151              		.cfi_endproc
+ 152              	.LFE66:
+ 153              		.size	ReadCount, .-ReadCount
+ 154 004e 00BF     		.section	.text.main,"ax",%progbits
+ 155              		.align	2
+ 156              		.global	main
+ 157              		.thumb
+ 158              		.thumb_func
+ 159              		.type	main, %function
+ 160              	main:
+ 161              	.LFB63:
+  29:main.c        ****  
+ 162              		.loc 1 29 0
+ 163              		.cfi_startproc
+ 164              		@ Volatile: function does not return.
+ 165              		@ args = 0, pretend = 0, frame = 0
+ 166              		@ frame_needed = 0, uses_anonymous_args = 0
+ 167 0000 08B5     		push	{r3, lr}
+ 168              		.cfi_def_cfa_offset 8
+ 169              		.cfi_offset 3, -8
+ 170              		.cfi_offset 14, -4
+  31:main.c        ****     Counter_Start();
+ 171              		.loc 1 31 0
+ 172 0002 FFF7FEFF 		bl	LCD_Start
+ 173              	.LVL14:
+  32:main.c        ****     isr_timer_StartEx(ISR_counter);
+ 174              		.loc 1 32 0
+ 175 0006 FFF7FEFF 		bl	Counter_Start
+ 176              	.LVL15:
+  33:main.c        ****     isr_Tarado_StartEx(ISR_Tarado);
+ 177              		.loc 1 33 0
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 6
+
+
+ 178 000a 3D48     		ldr	r0, .L22
+ 179 000c FFF7FEFF 		bl	isr_timer_StartEx
+ 180              	.LVL16:
+  34:main.c        ****     
+ 181              		.loc 1 34 0
+ 182 0010 3C48     		ldr	r0, .L22+4
+ 183 0012 FFF7FEFF 		bl	isr_Tarado_StartEx
+ 184              	.LVL17:
+  36:main.c        **** 
+ 185              		.loc 1 36 0
+ 186              		.syntax unified
+ 187              	@ 36 "main.c" 1
+ 188 0016 62B6     		CPSIE   i
+ 189              	@ 0 "" 2
+ 190              		.thumb
+ 191              		.syntax unified
+ 192              	.L14:
+  43:main.c        ****             cont++;//1seg cada 1000 interrupciones
+ 193              		.loc 1 43 0
+ 194 0018 3B4B     		ldr	r3, .L22+8
+ 195 001a 1B88     		ldrh	r3, [r3]
+ 196 001c 002B     		cmp	r3, #0
+ 197 001e FBD0     		beq	.L14
+  44:main.c        ****             //Toma de 20 muestras cada 500ms, 1 muestra cada 25ms
+ 198              		.loc 1 44 0
+ 199 0020 394A     		ldr	r2, .L22+8
+ 200 0022 9388     		ldrh	r3, [r2, #4]
+ 201 0024 0133     		adds	r3, r3, #1
+ 202 0026 9BB2     		uxth	r3, r3
+ 203 0028 9380     		strh	r3, [r2, #4]	@ movhi
+  46:main.c        ****                 VADC= (uint32)(ReadCount());
+ 204              		.loc 1 46 0
+ 205 002a 384A     		ldr	r2, .L22+12
+ 206 002c A2FB0312 		umull	r1, r2, r2, r3
+ 207 0030 D208     		lsrs	r2, r2, #3
+ 208 0032 02EB8202 		add	r2, r2, r2, lsl #2
+ 209 0036 02EB8202 		add	r2, r2, r2, lsl #2
+ 210 003a 9B1A     		subs	r3, r3, r2
+ 211 003c 9BB2     		uxth	r3, r3
+ 212 003e 002B     		cmp	r3, #0
+ 213 0040 EAD1     		bne	.L14
+  47:main.c        ****                 VADC_prom+=VADC;
+ 214              		.loc 1 47 0
+ 215 0042 FFF7FEFF 		bl	ReadCount
+ 216              	.LVL18:
+ 217 0046 304A     		ldr	r2, .L22+8
+ 218 0048 9060     		str	r0, [r2, #8]
+  48:main.c        ****                 if (cont==500){
+ 219              		.loc 1 48 0
+ 220 004a D368     		ldr	r3, [r2, #12]
+ 221 004c 0344     		add	r3, r3, r0
+ 222 004e D360     		str	r3, [r2, #12]
+  49:main.c        ****                     VADC_prom/=20; // Promedio de 20 muestras
+ 223              		.loc 1 49 0
+ 224 0050 9288     		ldrh	r2, [r2, #4]
+ 225 0052 B2F5FA7F 		cmp	r2, #500
+ 226 0056 DFD1     		bne	.L14
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 7
+
+
+  50:main.c        ****                     if(ban_boton){
+ 227              		.loc 1 50 0
+ 228 0058 2D4A     		ldr	r2, .L22+16
+ 229 005a A2FB0323 		umull	r2, r3, r2, r3
+ 230 005e 1B09     		lsrs	r3, r3, #4
+ 231 0060 294A     		ldr	r2, .L22+8
+ 232 0062 D360     		str	r3, [r2, #12]
+  51:main.c        ****                         b=VADC_prom;
+ 233              		.loc 1 51 0
+ 234 0064 9278     		ldrb	r2, [r2, #2]	@ zero_extendqisi2
+ 235 0066 22B1     		cbz	r2, .L17
+  52:main.c        ****                         ban_boton=0;
+ 236              		.loc 1 52 0
+ 237 0068 2A4A     		ldr	r2, .L22+20
+ 238 006a 1380     		strh	r3, [r2]	@ movhi
+  53:main.c        ****                     }        
+ 239              		.loc 1 53 0
+ 240 006c 0021     		movs	r1, #0
+ 241 006e 264A     		ldr	r2, .L22+8
+ 242 0070 9170     		strb	r1, [r2, #2]
+ 243              	.L17:
+  55:main.c        ****                         Peso=(uint32)(VADC_prom-b)*700/749;
+ 244              		.loc 1 55 0
+ 245 0072 284A     		ldr	r2, .L22+20
+ 246 0074 1288     		ldrh	r2, [r2]
+ 247 0076 9342     		cmp	r3, r2
+ 248 0078 14D3     		bcc	.L18
+  56:main.c        ****                         LCD_Position(2,0);
+ 249              		.loc 1 56 0
+ 250 007a 9B1A     		subs	r3, r3, r2
+ 251 007c 4FF42F72 		mov	r2, #700
+ 252 0080 02FB03F3 		mul	r3, r2, r3
+ 253 0084 244A     		ldr	r2, .L22+24
+ 254 0086 A2FB0323 		umull	r2, r3, r2, r3
+ 255 008a 1B0A     		lsrs	r3, r3, #8
+ 256 008c 1E4C     		ldr	r4, .L22+8
+ 257 008e 2361     		str	r3, [r4, #16]
+  57:main.c        ****                         LCD_PrintString("Peso = ");
+ 258              		.loc 1 57 0
+ 259 0090 0021     		movs	r1, #0
+ 260 0092 0220     		movs	r0, #2
+ 261 0094 FFF7FEFF 		bl	LCD_Position
+ 262              	.LVL19:
+  58:main.c        ****                         LCD_PrintU32Number(Peso);
+ 263              		.loc 1 58 0
+ 264 0098 2048     		ldr	r0, .L22+28
+ 265 009a FFF7FEFF 		bl	LCD_PrintString
+ 266              	.LVL20:
+  59:main.c        ****               
+ 267              		.loc 1 59 0
+ 268 009e 2069     		ldr	r0, [r4, #16]
+ 269 00a0 FFF7FEFF 		bl	LCD_PrintU32Number
+ 270              	.LVL21:
+ 271              	.L18:
+  62:main.c        ****                         Peso=(uint32)(b-VADC_prom)*700/749;
+ 272              		.loc 1 62 0
+ 273 00a4 1B4B     		ldr	r3, .L22+20
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 8
+
+
+ 274 00a6 1B88     		ldrh	r3, [r3]
+ 275 00a8 174A     		ldr	r2, .L22+8
+ 276 00aa D268     		ldr	r2, [r2, #12]
+ 277 00ac 9342     		cmp	r3, r2
+ 278 00ae 14D9     		bls	.L19
+  63:main.c        ****                         LCD_Position(2,0);
+ 279              		.loc 1 63 0
+ 280 00b0 9A1A     		subs	r2, r3, r2
+ 281 00b2 4FF42F73 		mov	r3, #700
+ 282 00b6 03FB02F3 		mul	r3, r3, r2
+ 283 00ba 174A     		ldr	r2, .L22+24
+ 284 00bc A2FB0323 		umull	r2, r3, r2, r3
+ 285 00c0 1B0A     		lsrs	r3, r3, #8
+ 286 00c2 114C     		ldr	r4, .L22+8
+ 287 00c4 2361     		str	r3, [r4, #16]
+  64:main.c        ****                         LCD_PrintString("Peso = -");
+ 288              		.loc 1 64 0
+ 289 00c6 0021     		movs	r1, #0
+ 290 00c8 0220     		movs	r0, #2
+ 291 00ca FFF7FEFF 		bl	LCD_Position
+ 292              	.LVL22:
+  65:main.c        ****                         LCD_PrintU32Number(Peso); 
+ 293              		.loc 1 65 0
+ 294 00ce 1448     		ldr	r0, .L22+32
+ 295 00d0 FFF7FEFF 		bl	LCD_PrintString
+ 296              	.LVL23:
+  66:main.c        ****                     }
+ 297              		.loc 1 66 0
+ 298 00d4 2069     		ldr	r0, [r4, #16]
+ 299 00d6 FFF7FEFF 		bl	LCD_PrintU32Number
+ 300              	.LVL24:
+ 301              	.L19:
+  68:main.c        ****                     LCD_PrintString("ADC = ");
+ 302              		.loc 1 68 0
+ 303 00da 0021     		movs	r1, #0
+ 304 00dc 0846     		mov	r0, r1
+ 305 00de FFF7FEFF 		bl	LCD_Position
+ 306              	.LVL25:
+  69:main.c        ****                     LCD_PrintU32Number(VADC_prom);
+ 307              		.loc 1 69 0
+ 308 00e2 1048     		ldr	r0, .L22+36
+ 309 00e4 FFF7FEFF 		bl	LCD_PrintString
+ 310              	.LVL26:
+  70:main.c        ****                     LCD_ClearDisplay();
+ 311              		.loc 1 70 0
+ 312 00e8 074C     		ldr	r4, .L22+8
+ 313 00ea E068     		ldr	r0, [r4, #12]
+ 314 00ec FFF7FEFF 		bl	LCD_PrintU32Number
+ 315              	.LVL27:
+  71:main.c        ****                     VADC=0;
+ 316              		.loc 1 71 0
+ 317 00f0 0120     		movs	r0, #1
+ 318 00f2 FFF7FEFF 		bl	LCD_WriteControl
+ 319              	.LVL28:
+  72:main.c        ****                     VADC_prom=0;
+ 320              		.loc 1 72 0
+ 321 00f6 0023     		movs	r3, #0
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 9
+
+
+ 322 00f8 A360     		str	r3, [r4, #8]
+  73:main.c        ****                 }
+ 323              		.loc 1 73 0
+ 324 00fa E360     		str	r3, [r4, #12]
+ 325 00fc 8CE7     		b	.L14
+ 326              	.L23:
+ 327 00fe 00BF     		.align	2
+ 328              	.L22:
+ 329 0100 00000000 		.word	ISR_counter
+ 330 0104 00000000 		.word	ISR_Tarado
+ 331 0108 00000000 		.word	.LANCHOR0
+ 332 010c 1F85EB51 		.word	1374389535
+ 333 0110 CDCCCCCC 		.word	-858993459
+ 334 0114 00000000 		.word	.LANCHOR1
+ 335 0118 C17C7F57 		.word	1467972801
+ 336 011c 00000000 		.word	.LC0
+ 337 0120 08000000 		.word	.LC1
+ 338 0124 14000000 		.word	.LC2
+ 339              		.cfi_endproc
+ 340              	.LFE63:
+ 341              		.size	main, .-main
+ 342              		.global	Peso
+ 343              		.global	VADC_prom
+ 344              		.global	VADC
+ 345              		.global	cont
+ 346              		.global	m
+ 347              		.global	z
+ 348              		.global	b
+ 349              		.global	ban_neg
+ 350              		.global	ban_boton
+ 351              		.global	ban_cont1
+ 352              		.global	ban_cont
+ 353              		.data
+ 354              		.align	1
+ 355              		.set	.LANCHOR1,. + 0
+ 356              		.type	b, %object
+ 357              		.size	b, 2
+ 358              	b:
+ 359 0000 0E01     		.short	270
+ 360              		.type	m, %object
+ 361              		.size	m, 2
+ 362              	m:
+ 363 0002 ED02     		.short	749
+ 364              		.type	z, %object
+ 365              		.size	z, 2
+ 366              	z:
+ 367 0004 BC02     		.short	700
+ 368              		.section	.rodata.str1.4,"aMS",%progbits,1
+ 369              		.align	2
+ 370              	.LC0:
+ 371 0000 5065736F 		.ascii	"Peso = \000"
+ 371      203D2000 
+ 372              	.LC1:
+ 373 0008 5065736F 		.ascii	"Peso = -\000"
+ 373      203D202D 
+ 373      00
+ 374 0011 000000   		.space	3
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 10
+
+
+ 375              	.LC2:
+ 376 0014 41444320 		.ascii	"ADC = \000"
+ 376      3D2000
+ 377              		.bss
+ 378              		.align	2
+ 379              		.set	.LANCHOR0,. + 0
+ 380              		.type	ban_cont, %object
+ 381              		.size	ban_cont, 2
+ 382              	ban_cont:
+ 383 0000 0000     		.space	2
+ 384              		.type	ban_boton, %object
+ 385              		.size	ban_boton, 1
+ 386              	ban_boton:
+ 387 0002 00       		.space	1
+ 388 0003 00       		.space	1
+ 389              		.type	cont, %object
+ 390              		.size	cont, 2
+ 391              	cont:
+ 392 0004 0000     		.space	2
+ 393 0006 0000     		.space	2
+ 394              		.type	VADC, %object
+ 395              		.size	VADC, 4
+ 396              	VADC:
+ 397 0008 00000000 		.space	4
+ 398              		.type	VADC_prom, %object
+ 399              		.size	VADC_prom, 4
+ 400              	VADC_prom:
+ 401 000c 00000000 		.space	4
+ 402              		.type	Peso, %object
+ 403              		.size	Peso, 4
+ 404              	Peso:
+ 405 0010 00000000 		.space	4
+ 406              		.type	ban_neg, %object
+ 407              		.size	ban_neg, 1
+ 408              	ban_neg:
+ 409 0014 00       		.space	1
+ 410 0015 00       		.space	1
+ 411              		.type	ban_cont1, %object
+ 412              		.size	ban_cont1, 2
+ 413              	ban_cont1:
+ 414 0016 0000     		.space	2
+ 415              		.text
+ 416              	.Letext0:
+ 417              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 418              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 419              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+ 420              		.file 5 "Generated_Source\\PSoC5/core_cm3.h"
+ 421              		.file 6 "Generated_Source\\PSoC5/ADSK.h"
+ 422              		.file 7 "Generated_Source\\PSoC5/ADDO.h"
+ 423              		.file 8 "Generated_Source\\PSoC5/LCD.h"
+ 424              		.file 9 "Generated_Source\\PSoC5/Counter.h"
+ 425              		.file 10 "Generated_Source\\PSoC5/isr_timer.h"
+ 426              		.file 11 "Generated_Source\\PSoC5/isr_Tarado.h"
+ 427              		.section	.debug_info,"",%progbits
+ 428              	.Ldebug_info0:
+ 429 0000 04040000 		.4byte	0x404
+ 430 0004 0400     		.2byte	0x4
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 11
+
+
+ 431 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 432 000a 04       		.byte	0x4
+ 433 000b 01       		.uleb128 0x1
+ 434 000c 77000000 		.4byte	.LASF42
+ 435 0010 0C       		.byte	0xc
+ 436 0011 0B020000 		.4byte	.LASF43
+ 437 0015 76020000 		.4byte	.LASF44
+ 438 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 439 001d 00000000 		.4byte	0
+ 440 0021 00000000 		.4byte	.Ldebug_line0
+ 441 0025 02       		.uleb128 0x2
+ 442 0026 01       		.byte	0x1
+ 443 0027 06       		.byte	0x6
+ 444 0028 6A020000 		.4byte	.LASF0
+ 445 002c 02       		.uleb128 0x2
+ 446 002d 01       		.byte	0x1
+ 447 002e 08       		.byte	0x8
+ 448 002f 69000000 		.4byte	.LASF1
+ 449 0033 02       		.uleb128 0x2
+ 450 0034 02       		.byte	0x2
+ 451 0035 05       		.byte	0x5
+ 452 0036 2E020000 		.4byte	.LASF2
+ 453 003a 02       		.uleb128 0x2
+ 454 003b 02       		.byte	0x2
+ 455 003c 07       		.byte	0x7
+ 456 003d 17010000 		.4byte	.LASF3
+ 457 0041 03       		.uleb128 0x3
+ 458 0042 1F000000 		.4byte	.LASF9
+ 459 0046 02       		.byte	0x2
+ 460 0047 3F       		.byte	0x3f
+ 461 0048 4C000000 		.4byte	0x4c
+ 462 004c 02       		.uleb128 0x2
+ 463 004d 04       		.byte	0x4
+ 464 004e 05       		.byte	0x5
+ 465 004f 53020000 		.4byte	.LASF4
+ 466 0053 02       		.uleb128 0x2
+ 467 0054 04       		.byte	0x4
+ 468 0055 07       		.byte	0x7
+ 469 0056 05010000 		.4byte	.LASF5
+ 470 005a 02       		.uleb128 0x2
+ 471 005b 08       		.byte	0x8
+ 472 005c 05       		.byte	0x5
+ 473 005d FD010000 		.4byte	.LASF6
+ 474 0061 02       		.uleb128 0x2
+ 475 0062 08       		.byte	0x8
+ 476 0063 07       		.byte	0x7
+ 477 0064 99010000 		.4byte	.LASF7
+ 478 0068 04       		.uleb128 0x4
+ 479 0069 04       		.byte	0x4
+ 480 006a 05       		.byte	0x5
+ 481 006b 696E7400 		.ascii	"int\000"
+ 482 006f 02       		.uleb128 0x2
+ 483 0070 04       		.byte	0x4
+ 484 0071 07       		.byte	0x7
+ 485 0072 8C010000 		.4byte	.LASF8
+ 486 0076 03       		.uleb128 0x3
+ 487 0077 3F000000 		.4byte	.LASF10
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 12
+
+
+ 488 007b 03       		.byte	0x3
+ 489 007c 2C       		.byte	0x2c
+ 490 007d 41000000 		.4byte	0x41
+ 491 0081 05       		.uleb128 0x5
+ 492 0082 38020000 		.4byte	.LASF11
+ 493 0086 04       		.byte	0x4
+ 494 0087 E801     		.2byte	0x1e8
+ 495 0089 2C000000 		.4byte	0x2c
+ 496 008d 05       		.uleb128 0x5
+ 497 008e 74010000 		.4byte	.LASF12
+ 498 0092 04       		.byte	0x4
+ 499 0093 E901     		.2byte	0x1e9
+ 500 0095 3A000000 		.4byte	0x3a
+ 501 0099 05       		.uleb128 0x5
+ 502 009a 85010000 		.4byte	.LASF13
+ 503 009e 04       		.byte	0x4
+ 504 009f EA01     		.2byte	0x1ea
+ 505 00a1 53000000 		.4byte	0x53
+ 506 00a5 02       		.uleb128 0x2
+ 507 00a6 04       		.byte	0x4
+ 508 00a7 04       		.byte	0x4
+ 509 00a8 59000000 		.4byte	.LASF14
+ 510 00ac 02       		.uleb128 0x2
+ 511 00ad 08       		.byte	0x8
+ 512 00ae 04       		.byte	0x4
+ 513 00af 45010000 		.4byte	.LASF15
+ 514 00b3 02       		.uleb128 0x2
+ 515 00b4 01       		.byte	0x1
+ 516 00b5 08       		.byte	0x8
+ 517 00b6 12020000 		.4byte	.LASF16
+ 518 00ba 02       		.uleb128 0x2
+ 519 00bb 08       		.byte	0x8
+ 520 00bc 04       		.byte	0x4
+ 521 00bd E8010000 		.4byte	.LASF17
+ 522 00c1 02       		.uleb128 0x2
+ 523 00c2 04       		.byte	0x4
+ 524 00c3 07       		.byte	0x7
+ 525 00c4 F4010000 		.4byte	.LASF18
+ 526 00c8 06       		.uleb128 0x6
+ 527 00c9 29000000 		.4byte	.LASF19
+ 528 00cd 01       		.byte	0x1
+ 529 00ce 50       		.byte	0x50
+ 530 00cf 00000000 		.4byte	.LFB64
+ 531 00d3 0C000000 		.4byte	.LFE64-.LFB64
+ 532 00d7 01       		.uleb128 0x1
+ 533 00d8 9C       		.byte	0x9c
+ 534 00d9 06       		.uleb128 0x6
+ 535 00da 14000000 		.4byte	.LASF20
+ 536 00de 01       		.byte	0x1
+ 537 00df 53       		.byte	0x53
+ 538 00e0 00000000 		.4byte	.LFB65
+ 539 00e4 0C000000 		.4byte	.LFE65-.LFB65
+ 540 00e8 01       		.uleb128 0x1
+ 541 00e9 9C       		.byte	0x9c
+ 542 00ea 07       		.uleb128 0x7
+ 543 00eb 0A000000 		.4byte	.LASF45
+ 544 00ef 01       		.byte	0x1
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 13
+
+
+ 545 00f0 56       		.byte	0x56
+ 546 00f1 99000000 		.4byte	0x99
+ 547 00f5 00000000 		.4byte	.LFB66
+ 548 00f9 4E000000 		.4byte	.LFE66-.LFB66
+ 549 00fd 01       		.uleb128 0x1
+ 550 00fe 9C       		.byte	0x9c
+ 551 00ff AE010000 		.4byte	0x1ae
+ 552 0103 08       		.uleb128 0x8
+ 553 0104 28020000 		.4byte	.LASF21
+ 554 0108 01       		.byte	0x1
+ 555 0109 57       		.byte	0x57
+ 556 010a 99000000 		.4byte	0x99
+ 557 010e 00000000 		.4byte	.LLST0
+ 558 0112 09       		.uleb128 0x9
+ 559 0113 1C000000 		.4byte	.LBB2
+ 560 0117 1E000000 		.4byte	.LBE2-.LBB2
+ 561 011b 5C010000 		.4byte	0x15c
+ 562 011f 0A       		.uleb128 0xa
+ 563 0120 6900     		.ascii	"i\000"
+ 564 0122 01       		.byte	0x1
+ 565 0123 5C       		.byte	0x5c
+ 566 0124 81000000 		.4byte	0x81
+ 567 0128 1F000000 		.4byte	.LLST1
+ 568 012c 0B       		.uleb128 0xb
+ 569 012d 22000000 		.4byte	.LVL4
+ 570 0131 8E030000 		.4byte	0x38e
+ 571 0135 3F010000 		.4byte	0x13f
+ 572 0139 0C       		.uleb128 0xc
+ 573 013a 01       		.uleb128 0x1
+ 574 013b 50       		.byte	0x50
+ 575 013c 01       		.uleb128 0x1
+ 576 013d 31       		.byte	0x31
+ 577 013e 00       		.byte	0
+ 578 013f 0B       		.uleb128 0xb
+ 579 0140 2A000000 		.4byte	.LVL6
+ 580 0144 8E030000 		.4byte	0x38e
+ 581 0148 52010000 		.4byte	0x152
+ 582 014c 0C       		.uleb128 0xc
+ 583 014d 01       		.uleb128 0x1
+ 584 014e 50       		.byte	0x50
+ 585 014f 01       		.uleb128 0x1
+ 586 0150 30       		.byte	0x30
+ 587 0151 00       		.byte	0
+ 588 0152 0D       		.uleb128 0xd
+ 589 0153 2E000000 		.4byte	.LVL7
+ 590 0157 99030000 		.4byte	0x399
+ 591 015b 00       		.byte	0
+ 592 015c 0B       		.uleb128 0xb
+ 593 015d 08000000 		.4byte	.LVL0
+ 594 0161 A4030000 		.4byte	0x3a4
+ 595 0165 6F010000 		.4byte	0x16f
+ 596 0169 0C       		.uleb128 0xc
+ 597 016a 01       		.uleb128 0x1
+ 598 016b 50       		.byte	0x50
+ 599 016c 01       		.uleb128 0x1
+ 600 016d 31       		.byte	0x31
+ 601 016e 00       		.byte	0
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 14
+
+
+ 602 016f 0B       		.uleb128 0xb
+ 603 0170 0E000000 		.4byte	.LVL1
+ 604 0174 8E030000 		.4byte	0x38e
+ 605 0178 82010000 		.4byte	0x182
+ 606 017c 0C       		.uleb128 0xc
+ 607 017d 01       		.uleb128 0x1
+ 608 017e 50       		.byte	0x50
+ 609 017f 01       		.uleb128 0x1
+ 610 0180 30       		.byte	0x30
+ 611 0181 00       		.byte	0
+ 612 0182 0D       		.uleb128 0xd
+ 613 0183 12000000 		.4byte	.LVL2
+ 614 0187 99030000 		.4byte	0x399
+ 615 018b 0B       		.uleb128 0xb
+ 616 018c 40000000 		.4byte	.LVL11
+ 617 0190 8E030000 		.4byte	0x38e
+ 618 0194 9E010000 		.4byte	0x19e
+ 619 0198 0C       		.uleb128 0xc
+ 620 0199 01       		.uleb128 0x1
+ 621 019a 50       		.byte	0x50
+ 622 019b 01       		.uleb128 0x1
+ 623 019c 31       		.byte	0x31
+ 624 019d 00       		.byte	0
+ 625 019e 0E       		.uleb128 0xe
+ 626 019f 4A000000 		.4byte	.LVL13
+ 627 01a3 8E030000 		.4byte	0x38e
+ 628 01a7 0C       		.uleb128 0xc
+ 629 01a8 01       		.uleb128 0x1
+ 630 01a9 50       		.byte	0x50
+ 631 01aa 01       		.uleb128 0x1
+ 632 01ab 30       		.byte	0x30
+ 633 01ac 00       		.byte	0
+ 634 01ad 00       		.byte	0
+ 635 01ae 0F       		.uleb128 0xf
+ 636 01af 4C010000 		.4byte	.LASF46
+ 637 01b3 01       		.byte	0x1
+ 638 01b4 1C       		.byte	0x1c
+ 639 01b5 68000000 		.4byte	0x68
+ 640 01b9 00000000 		.4byte	.LFB63
+ 641 01bd 28010000 		.4byte	.LFE63-.LFB63
+ 642 01c1 01       		.uleb128 0x1
+ 643 01c2 9C       		.byte	0x9c
+ 644 01c3 C8020000 		.4byte	0x2c8
+ 645 01c7 0D       		.uleb128 0xd
+ 646 01c8 06000000 		.4byte	.LVL14
+ 647 01cc AF030000 		.4byte	0x3af
+ 648 01d0 0D       		.uleb128 0xd
+ 649 01d1 0A000000 		.4byte	.LVL15
+ 650 01d5 BA030000 		.4byte	0x3ba
+ 651 01d9 0B       		.uleb128 0xb
+ 652 01da 10000000 		.4byte	.LVL16
+ 653 01de C5030000 		.4byte	0x3c5
+ 654 01e2 F0010000 		.4byte	0x1f0
+ 655 01e6 0C       		.uleb128 0xc
+ 656 01e7 01       		.uleb128 0x1
+ 657 01e8 50       		.byte	0x50
+ 658 01e9 05       		.uleb128 0x5
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 15
+
+
+ 659 01ea 03       		.byte	0x3
+ 660 01eb 00000000 		.4byte	ISR_counter
+ 661 01ef 00       		.byte	0
+ 662 01f0 0B       		.uleb128 0xb
+ 663 01f1 16000000 		.4byte	.LVL17
+ 664 01f5 D0030000 		.4byte	0x3d0
+ 665 01f9 07020000 		.4byte	0x207
+ 666 01fd 0C       		.uleb128 0xc
+ 667 01fe 01       		.uleb128 0x1
+ 668 01ff 50       		.byte	0x50
+ 669 0200 05       		.uleb128 0x5
+ 670 0201 03       		.byte	0x3
+ 671 0202 00000000 		.4byte	ISR_Tarado
+ 672 0206 00       		.byte	0
+ 673 0207 0D       		.uleb128 0xd
+ 674 0208 46000000 		.4byte	.LVL18
+ 675 020c EA000000 		.4byte	0xea
+ 676 0210 0B       		.uleb128 0xb
+ 677 0211 98000000 		.4byte	.LVL19
+ 678 0215 DB030000 		.4byte	0x3db
+ 679 0219 28020000 		.4byte	0x228
+ 680 021d 0C       		.uleb128 0xc
+ 681 021e 01       		.uleb128 0x1
+ 682 021f 50       		.byte	0x50
+ 683 0220 01       		.uleb128 0x1
+ 684 0221 32       		.byte	0x32
+ 685 0222 0C       		.uleb128 0xc
+ 686 0223 01       		.uleb128 0x1
+ 687 0224 51       		.byte	0x51
+ 688 0225 01       		.uleb128 0x1
+ 689 0226 30       		.byte	0x30
+ 690 0227 00       		.byte	0
+ 691 0228 0B       		.uleb128 0xb
+ 692 0229 9E000000 		.4byte	.LVL20
+ 693 022d E6030000 		.4byte	0x3e6
+ 694 0231 3F020000 		.4byte	0x23f
+ 695 0235 0C       		.uleb128 0xc
+ 696 0236 01       		.uleb128 0x1
+ 697 0237 50       		.byte	0x50
+ 698 0238 05       		.uleb128 0x5
+ 699 0239 03       		.byte	0x3
+ 700 023a 00000000 		.4byte	.LC0
+ 701 023e 00       		.byte	0
+ 702 023f 0D       		.uleb128 0xd
+ 703 0240 A4000000 		.4byte	.LVL21
+ 704 0244 F1030000 		.4byte	0x3f1
+ 705 0248 0B       		.uleb128 0xb
+ 706 0249 CE000000 		.4byte	.LVL22
+ 707 024d DB030000 		.4byte	0x3db
+ 708 0251 60020000 		.4byte	0x260
+ 709 0255 0C       		.uleb128 0xc
+ 710 0256 01       		.uleb128 0x1
+ 711 0257 50       		.byte	0x50
+ 712 0258 01       		.uleb128 0x1
+ 713 0259 32       		.byte	0x32
+ 714 025a 0C       		.uleb128 0xc
+ 715 025b 01       		.uleb128 0x1
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 16
+
+
+ 716 025c 51       		.byte	0x51
+ 717 025d 01       		.uleb128 0x1
+ 718 025e 30       		.byte	0x30
+ 719 025f 00       		.byte	0
+ 720 0260 0B       		.uleb128 0xb
+ 721 0261 D4000000 		.4byte	.LVL23
+ 722 0265 E6030000 		.4byte	0x3e6
+ 723 0269 77020000 		.4byte	0x277
+ 724 026d 0C       		.uleb128 0xc
+ 725 026e 01       		.uleb128 0x1
+ 726 026f 50       		.byte	0x50
+ 727 0270 05       		.uleb128 0x5
+ 728 0271 03       		.byte	0x3
+ 729 0272 08000000 		.4byte	.LC1
+ 730 0276 00       		.byte	0
+ 731 0277 0D       		.uleb128 0xd
+ 732 0278 DA000000 		.4byte	.LVL24
+ 733 027c F1030000 		.4byte	0x3f1
+ 734 0280 0B       		.uleb128 0xb
+ 735 0281 E2000000 		.4byte	.LVL25
+ 736 0285 DB030000 		.4byte	0x3db
+ 737 0289 98020000 		.4byte	0x298
+ 738 028d 0C       		.uleb128 0xc
+ 739 028e 01       		.uleb128 0x1
+ 740 028f 50       		.byte	0x50
+ 741 0290 01       		.uleb128 0x1
+ 742 0291 30       		.byte	0x30
+ 743 0292 0C       		.uleb128 0xc
+ 744 0293 01       		.uleb128 0x1
+ 745 0294 51       		.byte	0x51
+ 746 0295 01       		.uleb128 0x1
+ 747 0296 30       		.byte	0x30
+ 748 0297 00       		.byte	0
+ 749 0298 0B       		.uleb128 0xb
+ 750 0299 E8000000 		.4byte	.LVL26
+ 751 029d E6030000 		.4byte	0x3e6
+ 752 02a1 AF020000 		.4byte	0x2af
+ 753 02a5 0C       		.uleb128 0xc
+ 754 02a6 01       		.uleb128 0x1
+ 755 02a7 50       		.byte	0x50
+ 756 02a8 05       		.uleb128 0x5
+ 757 02a9 03       		.byte	0x3
+ 758 02aa 14000000 		.4byte	.LC2
+ 759 02ae 00       		.byte	0
+ 760 02af 0D       		.uleb128 0xd
+ 761 02b0 F0000000 		.4byte	.LVL27
+ 762 02b4 F1030000 		.4byte	0x3f1
+ 763 02b8 0E       		.uleb128 0xe
+ 764 02b9 F6000000 		.4byte	.LVL28
+ 765 02bd FC030000 		.4byte	0x3fc
+ 766 02c1 0C       		.uleb128 0xc
+ 767 02c2 01       		.uleb128 0x1
+ 768 02c3 50       		.byte	0x50
+ 769 02c4 01       		.uleb128 0x1
+ 770 02c5 31       		.byte	0x31
+ 771 02c6 00       		.byte	0
+ 772 02c7 00       		.byte	0
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 17
+
+
+ 773 02c8 10       		.uleb128 0x10
+ 774 02c9 2A010000 		.4byte	.LASF22
+ 775 02cd 05       		.byte	0x5
+ 776 02ce 1207     		.2byte	0x712
+ 777 02d0 D4020000 		.4byte	0x2d4
+ 778 02d4 11       		.uleb128 0x11
+ 779 02d5 76000000 		.4byte	0x76
+ 780 02d9 12       		.uleb128 0x12
+ 781 02da 61020000 		.4byte	.LASF23
+ 782 02de 01       		.byte	0x1
+ 783 02df 0F       		.byte	0xf
+ 784 02e0 8D000000 		.4byte	0x8d
+ 785 02e4 05       		.uleb128 0x5
+ 786 02e5 03       		.byte	0x3
+ 787 02e6 00000000 		.4byte	ban_cont
+ 788 02ea 12       		.uleb128 0x12
+ 789 02eb 7B010000 		.4byte	.LASF24
+ 790 02ef 01       		.byte	0x1
+ 791 02f0 10       		.byte	0x10
+ 792 02f1 8D000000 		.4byte	0x8d
+ 793 02f5 05       		.uleb128 0x5
+ 794 02f6 03       		.byte	0x3
+ 795 02f7 00000000 		.4byte	ban_cont1
+ 796 02fb 12       		.uleb128 0x12
+ 797 02fc 35000000 		.4byte	.LASF25
+ 798 0300 01       		.byte	0x1
+ 799 0301 11       		.byte	0x11
+ 800 0302 81000000 		.4byte	0x81
+ 801 0306 05       		.uleb128 0x5
+ 802 0307 03       		.byte	0x3
+ 803 0308 00000000 		.4byte	ban_boton
+ 804 030c 12       		.uleb128 0x12
+ 805 030d E0010000 		.4byte	.LASF26
+ 806 0311 01       		.byte	0x1
+ 807 0312 12       		.byte	0x12
+ 808 0313 81000000 		.4byte	0x81
+ 809 0317 05       		.uleb128 0x5
+ 810 0318 03       		.byte	0x3
+ 811 0319 00000000 		.4byte	ban_neg
+ 812 031d 13       		.uleb128 0x13
+ 813 031e 6200     		.ascii	"b\000"
+ 814 0320 01       		.byte	0x1
+ 815 0321 13       		.byte	0x13
+ 816 0322 8D000000 		.4byte	0x8d
+ 817 0326 05       		.uleb128 0x5
+ 818 0327 03       		.byte	0x3
+ 819 0328 00000000 		.4byte	b
+ 820 032c 13       		.uleb128 0x13
+ 821 032d 7A00     		.ascii	"z\000"
+ 822 032f 01       		.byte	0x1
+ 823 0330 14       		.byte	0x14
+ 824 0331 8D000000 		.4byte	0x8d
+ 825 0335 05       		.uleb128 0x5
+ 826 0336 03       		.byte	0x3
+ 827 0337 00000000 		.4byte	z
+ 828 033b 13       		.uleb128 0x13
+ 829 033c 6D00     		.ascii	"m\000"
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 18
+
+
+ 830 033e 01       		.byte	0x1
+ 831 033f 15       		.byte	0x15
+ 832 0340 8D000000 		.4byte	0x8d
+ 833 0344 05       		.uleb128 0x5
+ 834 0345 03       		.byte	0x3
+ 835 0346 00000000 		.4byte	m
+ 836 034a 12       		.uleb128 0x12
+ 837 034b 5C020000 		.4byte	.LASF27
+ 838 034f 01       		.byte	0x1
+ 839 0350 16       		.byte	0x16
+ 840 0351 8D000000 		.4byte	0x8d
+ 841 0355 05       		.uleb128 0x5
+ 842 0356 03       		.byte	0x3
+ 843 0357 00000000 		.4byte	cont
+ 844 035b 12       		.uleb128 0x12
+ 845 035c DB010000 		.4byte	.LASF28
+ 846 0360 01       		.byte	0x1
+ 847 0361 17       		.byte	0x17
+ 848 0362 99000000 		.4byte	0x99
+ 849 0366 05       		.uleb128 0x5
+ 850 0367 03       		.byte	0x3
+ 851 0368 00000000 		.4byte	VADC
+ 852 036c 12       		.uleb128 0x12
+ 853 036d 00000000 		.4byte	.LASF29
+ 854 0371 01       		.byte	0x1
+ 855 0372 18       		.byte	0x18
+ 856 0373 99000000 		.4byte	0x99
+ 857 0377 05       		.uleb128 0x5
+ 858 0378 03       		.byte	0x3
+ 859 0379 00000000 		.4byte	VADC_prom
+ 860 037d 12       		.uleb128 0x12
+ 861 037e AD020000 		.4byte	.LASF30
+ 862 0382 01       		.byte	0x1
+ 863 0383 19       		.byte	0x19
+ 864 0384 99000000 		.4byte	0x99
+ 865 0388 05       		.uleb128 0x5
+ 866 0389 03       		.byte	0x3
+ 867 038a 00000000 		.4byte	Peso
+ 868 038e 14       		.uleb128 0x14
+ 869 038f D0010000 		.4byte	.LASF31
+ 870 0393 D0010000 		.4byte	.LASF31
+ 871 0397 06       		.byte	0x6
+ 872 0398 26       		.byte	0x26
+ 873 0399 14       		.uleb128 0x14
+ 874 039a 3E020000 		.4byte	.LASF32
+ 875 039e 3E020000 		.4byte	.LASF32
+ 876 03a2 07       		.byte	0x7
+ 877 03a3 29       		.byte	0x29
+ 878 03a4 14       		.uleb128 0x14
+ 879 03a5 48020000 		.4byte	.LASF33
+ 880 03a9 48020000 		.4byte	.LASF33
+ 881 03ad 07       		.byte	0x7
+ 882 03ae 26       		.byte	0x26
+ 883 03af 14       		.uleb128 0x14
+ 884 03b0 5F000000 		.4byte	.LASF34
+ 885 03b4 5F000000 		.4byte	.LASF34
+ 886 03b8 08       		.byte	0x8
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 19
+
+
+ 887 03b9 38       		.byte	0x38
+ 888 03ba 14       		.uleb128 0x14
+ 889 03bb 37010000 		.4byte	.LASF35
+ 890 03bf 37010000 		.4byte	.LASF35
+ 891 03c3 09       		.byte	0x9
+ 892 03c4 4F       		.byte	0x4f
+ 893 03c5 14       		.uleb128 0x14
+ 894 03c6 47000000 		.4byte	.LASF36
+ 895 03ca 47000000 		.4byte	.LASF36
+ 896 03ce 0A       		.byte	0xa
+ 897 03cf 18       		.byte	0x18
+ 898 03d0 14       		.uleb128 0x14
+ 899 03d1 51010000 		.4byte	.LASF37
+ 900 03d5 51010000 		.4byte	.LASF37
+ 901 03d9 0B       		.byte	0xb
+ 902 03da 18       		.byte	0x18
+ 903 03db 14       		.uleb128 0x14
+ 904 03dc B0010000 		.4byte	.LASF38
+ 905 03e0 B0010000 		.4byte	.LASF38
+ 906 03e4 08       		.byte	0x8
+ 907 03e5 3D       		.byte	0x3d
+ 908 03e6 14       		.uleb128 0x14
+ 909 03e7 64010000 		.4byte	.LASF39
+ 910 03eb 64010000 		.4byte	.LASF39
+ 911 03ef 08       		.byte	0x8
+ 912 03f0 3C       		.byte	0x3c
+ 913 03f1 14       		.uleb128 0x14
+ 914 03f2 BD010000 		.4byte	.LASF40
+ 915 03f6 BD010000 		.4byte	.LASF40
+ 916 03fa 08       		.byte	0x8
+ 917 03fb 61       		.byte	0x61
+ 918 03fc 14       		.uleb128 0x14
+ 919 03fd 17020000 		.4byte	.LASF41
+ 920 0401 17020000 		.4byte	.LASF41
+ 921 0405 08       		.byte	0x8
+ 922 0406 3A       		.byte	0x3a
+ 923 0407 00       		.byte	0
+ 924              		.section	.debug_abbrev,"",%progbits
+ 925              	.Ldebug_abbrev0:
+ 926 0000 01       		.uleb128 0x1
+ 927 0001 11       		.uleb128 0x11
+ 928 0002 01       		.byte	0x1
+ 929 0003 25       		.uleb128 0x25
+ 930 0004 0E       		.uleb128 0xe
+ 931 0005 13       		.uleb128 0x13
+ 932 0006 0B       		.uleb128 0xb
+ 933 0007 03       		.uleb128 0x3
+ 934 0008 0E       		.uleb128 0xe
+ 935 0009 1B       		.uleb128 0x1b
+ 936 000a 0E       		.uleb128 0xe
+ 937 000b 55       		.uleb128 0x55
+ 938 000c 17       		.uleb128 0x17
+ 939 000d 11       		.uleb128 0x11
+ 940 000e 01       		.uleb128 0x1
+ 941 000f 10       		.uleb128 0x10
+ 942 0010 17       		.uleb128 0x17
+ 943 0011 00       		.byte	0
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 20
+
+
+ 944 0012 00       		.byte	0
+ 945 0013 02       		.uleb128 0x2
+ 946 0014 24       		.uleb128 0x24
+ 947 0015 00       		.byte	0
+ 948 0016 0B       		.uleb128 0xb
+ 949 0017 0B       		.uleb128 0xb
+ 950 0018 3E       		.uleb128 0x3e
+ 951 0019 0B       		.uleb128 0xb
+ 952 001a 03       		.uleb128 0x3
+ 953 001b 0E       		.uleb128 0xe
+ 954 001c 00       		.byte	0
+ 955 001d 00       		.byte	0
+ 956 001e 03       		.uleb128 0x3
+ 957 001f 16       		.uleb128 0x16
+ 958 0020 00       		.byte	0
+ 959 0021 03       		.uleb128 0x3
+ 960 0022 0E       		.uleb128 0xe
+ 961 0023 3A       		.uleb128 0x3a
+ 962 0024 0B       		.uleb128 0xb
+ 963 0025 3B       		.uleb128 0x3b
+ 964 0026 0B       		.uleb128 0xb
+ 965 0027 49       		.uleb128 0x49
+ 966 0028 13       		.uleb128 0x13
+ 967 0029 00       		.byte	0
+ 968 002a 00       		.byte	0
+ 969 002b 04       		.uleb128 0x4
+ 970 002c 24       		.uleb128 0x24
+ 971 002d 00       		.byte	0
+ 972 002e 0B       		.uleb128 0xb
+ 973 002f 0B       		.uleb128 0xb
+ 974 0030 3E       		.uleb128 0x3e
+ 975 0031 0B       		.uleb128 0xb
+ 976 0032 03       		.uleb128 0x3
+ 977 0033 08       		.uleb128 0x8
+ 978 0034 00       		.byte	0
+ 979 0035 00       		.byte	0
+ 980 0036 05       		.uleb128 0x5
+ 981 0037 16       		.uleb128 0x16
+ 982 0038 00       		.byte	0
+ 983 0039 03       		.uleb128 0x3
+ 984 003a 0E       		.uleb128 0xe
+ 985 003b 3A       		.uleb128 0x3a
+ 986 003c 0B       		.uleb128 0xb
+ 987 003d 3B       		.uleb128 0x3b
+ 988 003e 05       		.uleb128 0x5
+ 989 003f 49       		.uleb128 0x49
+ 990 0040 13       		.uleb128 0x13
+ 991 0041 00       		.byte	0
+ 992 0042 00       		.byte	0
+ 993 0043 06       		.uleb128 0x6
+ 994 0044 2E       		.uleb128 0x2e
+ 995 0045 00       		.byte	0
+ 996 0046 3F       		.uleb128 0x3f
+ 997 0047 19       		.uleb128 0x19
+ 998 0048 03       		.uleb128 0x3
+ 999 0049 0E       		.uleb128 0xe
+ 1000 004a 3A       		.uleb128 0x3a
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 21
+
+
+ 1001 004b 0B       		.uleb128 0xb
+ 1002 004c 3B       		.uleb128 0x3b
+ 1003 004d 0B       		.uleb128 0xb
+ 1004 004e 27       		.uleb128 0x27
+ 1005 004f 19       		.uleb128 0x19
+ 1006 0050 11       		.uleb128 0x11
+ 1007 0051 01       		.uleb128 0x1
+ 1008 0052 12       		.uleb128 0x12
+ 1009 0053 06       		.uleb128 0x6
+ 1010 0054 40       		.uleb128 0x40
+ 1011 0055 18       		.uleb128 0x18
+ 1012 0056 9742     		.uleb128 0x2117
+ 1013 0058 19       		.uleb128 0x19
+ 1014 0059 00       		.byte	0
+ 1015 005a 00       		.byte	0
+ 1016 005b 07       		.uleb128 0x7
+ 1017 005c 2E       		.uleb128 0x2e
+ 1018 005d 01       		.byte	0x1
+ 1019 005e 3F       		.uleb128 0x3f
+ 1020 005f 19       		.uleb128 0x19
+ 1021 0060 03       		.uleb128 0x3
+ 1022 0061 0E       		.uleb128 0xe
+ 1023 0062 3A       		.uleb128 0x3a
+ 1024 0063 0B       		.uleb128 0xb
+ 1025 0064 3B       		.uleb128 0x3b
+ 1026 0065 0B       		.uleb128 0xb
+ 1027 0066 27       		.uleb128 0x27
+ 1028 0067 19       		.uleb128 0x19
+ 1029 0068 49       		.uleb128 0x49
+ 1030 0069 13       		.uleb128 0x13
+ 1031 006a 11       		.uleb128 0x11
+ 1032 006b 01       		.uleb128 0x1
+ 1033 006c 12       		.uleb128 0x12
+ 1034 006d 06       		.uleb128 0x6
+ 1035 006e 40       		.uleb128 0x40
+ 1036 006f 18       		.uleb128 0x18
+ 1037 0070 9742     		.uleb128 0x2117
+ 1038 0072 19       		.uleb128 0x19
+ 1039 0073 01       		.uleb128 0x1
+ 1040 0074 13       		.uleb128 0x13
+ 1041 0075 00       		.byte	0
+ 1042 0076 00       		.byte	0
+ 1043 0077 08       		.uleb128 0x8
+ 1044 0078 34       		.uleb128 0x34
+ 1045 0079 00       		.byte	0
+ 1046 007a 03       		.uleb128 0x3
+ 1047 007b 0E       		.uleb128 0xe
+ 1048 007c 3A       		.uleb128 0x3a
+ 1049 007d 0B       		.uleb128 0xb
+ 1050 007e 3B       		.uleb128 0x3b
+ 1051 007f 0B       		.uleb128 0xb
+ 1052 0080 49       		.uleb128 0x49
+ 1053 0081 13       		.uleb128 0x13
+ 1054 0082 02       		.uleb128 0x2
+ 1055 0083 17       		.uleb128 0x17
+ 1056 0084 00       		.byte	0
+ 1057 0085 00       		.byte	0
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 22
+
+
+ 1058 0086 09       		.uleb128 0x9
+ 1059 0087 0B       		.uleb128 0xb
+ 1060 0088 01       		.byte	0x1
+ 1061 0089 11       		.uleb128 0x11
+ 1062 008a 01       		.uleb128 0x1
+ 1063 008b 12       		.uleb128 0x12
+ 1064 008c 06       		.uleb128 0x6
+ 1065 008d 01       		.uleb128 0x1
+ 1066 008e 13       		.uleb128 0x13
+ 1067 008f 00       		.byte	0
+ 1068 0090 00       		.byte	0
+ 1069 0091 0A       		.uleb128 0xa
+ 1070 0092 34       		.uleb128 0x34
+ 1071 0093 00       		.byte	0
+ 1072 0094 03       		.uleb128 0x3
+ 1073 0095 08       		.uleb128 0x8
+ 1074 0096 3A       		.uleb128 0x3a
+ 1075 0097 0B       		.uleb128 0xb
+ 1076 0098 3B       		.uleb128 0x3b
+ 1077 0099 0B       		.uleb128 0xb
+ 1078 009a 49       		.uleb128 0x49
+ 1079 009b 13       		.uleb128 0x13
+ 1080 009c 02       		.uleb128 0x2
+ 1081 009d 17       		.uleb128 0x17
+ 1082 009e 00       		.byte	0
+ 1083 009f 00       		.byte	0
+ 1084 00a0 0B       		.uleb128 0xb
+ 1085 00a1 898201   		.uleb128 0x4109
+ 1086 00a4 01       		.byte	0x1
+ 1087 00a5 11       		.uleb128 0x11
+ 1088 00a6 01       		.uleb128 0x1
+ 1089 00a7 31       		.uleb128 0x31
+ 1090 00a8 13       		.uleb128 0x13
+ 1091 00a9 01       		.uleb128 0x1
+ 1092 00aa 13       		.uleb128 0x13
+ 1093 00ab 00       		.byte	0
+ 1094 00ac 00       		.byte	0
+ 1095 00ad 0C       		.uleb128 0xc
+ 1096 00ae 8A8201   		.uleb128 0x410a
+ 1097 00b1 00       		.byte	0
+ 1098 00b2 02       		.uleb128 0x2
+ 1099 00b3 18       		.uleb128 0x18
+ 1100 00b4 9142     		.uleb128 0x2111
+ 1101 00b6 18       		.uleb128 0x18
+ 1102 00b7 00       		.byte	0
+ 1103 00b8 00       		.byte	0
+ 1104 00b9 0D       		.uleb128 0xd
+ 1105 00ba 898201   		.uleb128 0x4109
+ 1106 00bd 00       		.byte	0
+ 1107 00be 11       		.uleb128 0x11
+ 1108 00bf 01       		.uleb128 0x1
+ 1109 00c0 31       		.uleb128 0x31
+ 1110 00c1 13       		.uleb128 0x13
+ 1111 00c2 00       		.byte	0
+ 1112 00c3 00       		.byte	0
+ 1113 00c4 0E       		.uleb128 0xe
+ 1114 00c5 898201   		.uleb128 0x4109
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 23
+
+
+ 1115 00c8 01       		.byte	0x1
+ 1116 00c9 11       		.uleb128 0x11
+ 1117 00ca 01       		.uleb128 0x1
+ 1118 00cb 31       		.uleb128 0x31
+ 1119 00cc 13       		.uleb128 0x13
+ 1120 00cd 00       		.byte	0
+ 1121 00ce 00       		.byte	0
+ 1122 00cf 0F       		.uleb128 0xf
+ 1123 00d0 2E       		.uleb128 0x2e
+ 1124 00d1 01       		.byte	0x1
+ 1125 00d2 3F       		.uleb128 0x3f
+ 1126 00d3 19       		.uleb128 0x19
+ 1127 00d4 03       		.uleb128 0x3
+ 1128 00d5 0E       		.uleb128 0xe
+ 1129 00d6 3A       		.uleb128 0x3a
+ 1130 00d7 0B       		.uleb128 0xb
+ 1131 00d8 3B       		.uleb128 0x3b
+ 1132 00d9 0B       		.uleb128 0xb
+ 1133 00da 27       		.uleb128 0x27
+ 1134 00db 19       		.uleb128 0x19
+ 1135 00dc 49       		.uleb128 0x49
+ 1136 00dd 13       		.uleb128 0x13
+ 1137 00de 8701     		.uleb128 0x87
+ 1138 00e0 19       		.uleb128 0x19
+ 1139 00e1 11       		.uleb128 0x11
+ 1140 00e2 01       		.uleb128 0x1
+ 1141 00e3 12       		.uleb128 0x12
+ 1142 00e4 06       		.uleb128 0x6
+ 1143 00e5 40       		.uleb128 0x40
+ 1144 00e6 18       		.uleb128 0x18
+ 1145 00e7 9742     		.uleb128 0x2117
+ 1146 00e9 19       		.uleb128 0x19
+ 1147 00ea 01       		.uleb128 0x1
+ 1148 00eb 13       		.uleb128 0x13
+ 1149 00ec 00       		.byte	0
+ 1150 00ed 00       		.byte	0
+ 1151 00ee 10       		.uleb128 0x10
+ 1152 00ef 34       		.uleb128 0x34
+ 1153 00f0 00       		.byte	0
+ 1154 00f1 03       		.uleb128 0x3
+ 1155 00f2 0E       		.uleb128 0xe
+ 1156 00f3 3A       		.uleb128 0x3a
+ 1157 00f4 0B       		.uleb128 0xb
+ 1158 00f5 3B       		.uleb128 0x3b
+ 1159 00f6 05       		.uleb128 0x5
+ 1160 00f7 49       		.uleb128 0x49
+ 1161 00f8 13       		.uleb128 0x13
+ 1162 00f9 3F       		.uleb128 0x3f
+ 1163 00fa 19       		.uleb128 0x19
+ 1164 00fb 3C       		.uleb128 0x3c
+ 1165 00fc 19       		.uleb128 0x19
+ 1166 00fd 00       		.byte	0
+ 1167 00fe 00       		.byte	0
+ 1168 00ff 11       		.uleb128 0x11
+ 1169 0100 35       		.uleb128 0x35
+ 1170 0101 00       		.byte	0
+ 1171 0102 49       		.uleb128 0x49
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 24
+
+
+ 1172 0103 13       		.uleb128 0x13
+ 1173 0104 00       		.byte	0
+ 1174 0105 00       		.byte	0
+ 1175 0106 12       		.uleb128 0x12
+ 1176 0107 34       		.uleb128 0x34
+ 1177 0108 00       		.byte	0
+ 1178 0109 03       		.uleb128 0x3
+ 1179 010a 0E       		.uleb128 0xe
+ 1180 010b 3A       		.uleb128 0x3a
+ 1181 010c 0B       		.uleb128 0xb
+ 1182 010d 3B       		.uleb128 0x3b
+ 1183 010e 0B       		.uleb128 0xb
+ 1184 010f 49       		.uleb128 0x49
+ 1185 0110 13       		.uleb128 0x13
+ 1186 0111 3F       		.uleb128 0x3f
+ 1187 0112 19       		.uleb128 0x19
+ 1188 0113 02       		.uleb128 0x2
+ 1189 0114 18       		.uleb128 0x18
+ 1190 0115 00       		.byte	0
+ 1191 0116 00       		.byte	0
+ 1192 0117 13       		.uleb128 0x13
+ 1193 0118 34       		.uleb128 0x34
+ 1194 0119 00       		.byte	0
+ 1195 011a 03       		.uleb128 0x3
+ 1196 011b 08       		.uleb128 0x8
+ 1197 011c 3A       		.uleb128 0x3a
+ 1198 011d 0B       		.uleb128 0xb
+ 1199 011e 3B       		.uleb128 0x3b
+ 1200 011f 0B       		.uleb128 0xb
+ 1201 0120 49       		.uleb128 0x49
+ 1202 0121 13       		.uleb128 0x13
+ 1203 0122 3F       		.uleb128 0x3f
+ 1204 0123 19       		.uleb128 0x19
+ 1205 0124 02       		.uleb128 0x2
+ 1206 0125 18       		.uleb128 0x18
+ 1207 0126 00       		.byte	0
+ 1208 0127 00       		.byte	0
+ 1209 0128 14       		.uleb128 0x14
+ 1210 0129 2E       		.uleb128 0x2e
+ 1211 012a 00       		.byte	0
+ 1212 012b 3F       		.uleb128 0x3f
+ 1213 012c 19       		.uleb128 0x19
+ 1214 012d 3C       		.uleb128 0x3c
+ 1215 012e 19       		.uleb128 0x19
+ 1216 012f 6E       		.uleb128 0x6e
+ 1217 0130 0E       		.uleb128 0xe
+ 1218 0131 03       		.uleb128 0x3
+ 1219 0132 0E       		.uleb128 0xe
+ 1220 0133 3A       		.uleb128 0x3a
+ 1221 0134 0B       		.uleb128 0xb
+ 1222 0135 3B       		.uleb128 0x3b
+ 1223 0136 0B       		.uleb128 0xb
+ 1224 0137 00       		.byte	0
+ 1225 0138 00       		.byte	0
+ 1226 0139 00       		.byte	0
+ 1227              		.section	.debug_loc,"",%progbits
+ 1228              	.Ldebug_loc0:
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 25
+
+
+ 1229              	.LLST0:
+ 1230 0000 0E000000 		.4byte	.LVL1
+ 1231 0004 1C000000 		.4byte	.LVL3
+ 1232 0008 0200     		.2byte	0x2
+ 1233 000a 30       		.byte	0x30
+ 1234 000b 9F       		.byte	0x9f
+ 1235 000c 1C000000 		.4byte	.LVL3
+ 1236 0010 4E000000 		.4byte	.LFE66
+ 1237 0014 0100     		.2byte	0x1
+ 1238 0016 55       		.byte	0x55
+ 1239 0017 00000000 		.4byte	0
+ 1240 001b 00000000 		.4byte	0
+ 1241              	.LLST1:
+ 1242 001f 1C000000 		.4byte	.LVL3
+ 1243 0023 34000000 		.4byte	.LVL9
+ 1244 0027 0100     		.2byte	0x1
+ 1245 0029 54       		.byte	0x54
+ 1246 002a 36000000 		.4byte	.LVL10
+ 1247 002e 4E000000 		.4byte	.LFE66
+ 1248 0032 0100     		.2byte	0x1
+ 1249 0034 54       		.byte	0x54
+ 1250 0035 00000000 		.4byte	0
+ 1251 0039 00000000 		.4byte	0
+ 1252              		.section	.debug_aranges,"",%progbits
+ 1253 0000 34000000 		.4byte	0x34
+ 1254 0004 0200     		.2byte	0x2
+ 1255 0006 00000000 		.4byte	.Ldebug_info0
+ 1256 000a 04       		.byte	0x4
+ 1257 000b 00       		.byte	0
+ 1258 000c 0000     		.2byte	0
+ 1259 000e 0000     		.2byte	0
+ 1260 0010 00000000 		.4byte	.LFB64
+ 1261 0014 0C000000 		.4byte	.LFE64-.LFB64
+ 1262 0018 00000000 		.4byte	.LFB65
+ 1263 001c 0C000000 		.4byte	.LFE65-.LFB65
+ 1264 0020 00000000 		.4byte	.LFB66
+ 1265 0024 4E000000 		.4byte	.LFE66-.LFB66
+ 1266 0028 00000000 		.4byte	.LFB63
+ 1267 002c 28010000 		.4byte	.LFE63-.LFB63
+ 1268 0030 00000000 		.4byte	0
+ 1269 0034 00000000 		.4byte	0
+ 1270              		.section	.debug_ranges,"",%progbits
+ 1271              	.Ldebug_ranges0:
+ 1272 0000 00000000 		.4byte	.LFB64
+ 1273 0004 0C000000 		.4byte	.LFE64
+ 1274 0008 00000000 		.4byte	.LFB65
+ 1275 000c 0C000000 		.4byte	.LFE65
+ 1276 0010 00000000 		.4byte	.LFB66
+ 1277 0014 4E000000 		.4byte	.LFE66
+ 1278 0018 00000000 		.4byte	.LFB63
+ 1279 001c 28010000 		.4byte	.LFE63
+ 1280 0020 00000000 		.4byte	0
+ 1281 0024 00000000 		.4byte	0
+ 1282              		.section	.debug_line,"",%progbits
+ 1283              	.Ldebug_line0:
+ 1284 0000 1D020000 		.section	.debug_str,"MS",%progbits,1
+ 1284      02009501 
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 26
+
+
+ 1284      00000201 
+ 1284      FB0E0D00 
+ 1284      01010101 
+ 1285              	.LASF29:
+ 1286 0000 56414443 		.ascii	"VADC_prom\000"
+ 1286      5F70726F 
+ 1286      6D00
+ 1287              	.LASF45:
+ 1288 000a 52656164 		.ascii	"ReadCount\000"
+ 1288      436F756E 
+ 1288      7400
+ 1289              	.LASF20:
+ 1290 0014 4953525F 		.ascii	"ISR_Tarado\000"
+ 1290      54617261 
+ 1290      646F00
+ 1291              	.LASF9:
+ 1292 001f 5F5F696E 		.ascii	"__int32_t\000"
+ 1292      7433325F 
+ 1292      7400
+ 1293              	.LASF19:
+ 1294 0029 4953525F 		.ascii	"ISR_counter\000"
+ 1294      636F756E 
+ 1294      74657200 
+ 1295              	.LASF25:
+ 1296 0035 62616E5F 		.ascii	"ban_boton\000"
+ 1296      626F746F 
+ 1296      6E00
+ 1297              	.LASF10:
+ 1298 003f 696E7433 		.ascii	"int32_t\000"
+ 1298      325F7400 
+ 1299              	.LASF36:
+ 1300 0047 6973725F 		.ascii	"isr_timer_StartEx\000"
+ 1300      74696D65 
+ 1300      725F5374 
+ 1300      61727445 
+ 1300      7800
+ 1301              	.LASF14:
+ 1302 0059 666C6F61 		.ascii	"float\000"
+ 1302      7400
+ 1303              	.LASF34:
+ 1304 005f 4C43445F 		.ascii	"LCD_Start\000"
+ 1304      53746172 
+ 1304      7400
+ 1305              	.LASF1:
+ 1306 0069 756E7369 		.ascii	"unsigned char\000"
+ 1306      676E6564 
+ 1306      20636861 
+ 1306      7200
+ 1307              	.LASF42:
+ 1308 0077 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 1308      43313120 
+ 1308      352E342E 
+ 1308      31203230 
+ 1308      31363036 
+ 1309 00aa 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m3 -mthumb -g -O"
+ 1309      20726576 
+ 1309      6973696F 
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 27
+
+
+ 1309      6E203233 
+ 1309      37373135 
+ 1310 00dd 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1310      66756E63 
+ 1310      74696F6E 
+ 1310      2D736563 
+ 1310      74696F6E 
+ 1311              	.LASF5:
+ 1312 0105 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1312      20756E73 
+ 1312      69676E65 
+ 1312      6420696E 
+ 1312      7400
+ 1313              	.LASF3:
+ 1314 0117 73686F72 		.ascii	"short unsigned int\000"
+ 1314      7420756E 
+ 1314      7369676E 
+ 1314      65642069 
+ 1314      6E7400
+ 1315              	.LASF22:
+ 1316 012a 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 1316      52784275 
+ 1316      66666572 
+ 1316      00
+ 1317              	.LASF35:
+ 1318 0137 436F756E 		.ascii	"Counter_Start\000"
+ 1318      7465725F 
+ 1318      53746172 
+ 1318      7400
+ 1319              	.LASF15:
+ 1320 0145 646F7562 		.ascii	"double\000"
+ 1320      6C6500
+ 1321              	.LASF46:
+ 1322 014c 6D61696E 		.ascii	"main\000"
+ 1322      00
+ 1323              	.LASF37:
+ 1324 0151 6973725F 		.ascii	"isr_Tarado_StartEx\000"
+ 1324      54617261 
+ 1324      646F5F53 
+ 1324      74617274 
+ 1324      457800
+ 1325              	.LASF39:
+ 1326 0164 4C43445F 		.ascii	"LCD_PrintString\000"
+ 1326      5072696E 
+ 1326      74537472 
+ 1326      696E6700 
+ 1327              	.LASF12:
+ 1328 0174 75696E74 		.ascii	"uint16\000"
+ 1328      313600
+ 1329              	.LASF24:
+ 1330 017b 62616E5F 		.ascii	"ban_cont1\000"
+ 1330      636F6E74 
+ 1330      3100
+ 1331              	.LASF13:
+ 1332 0185 75696E74 		.ascii	"uint32\000"
+ 1332      333200
+ 1333              	.LASF8:
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 28
+
+
+ 1334 018c 756E7369 		.ascii	"unsigned int\000"
+ 1334      676E6564 
+ 1334      20696E74 
+ 1334      00
+ 1335              	.LASF7:
+ 1336 0199 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1336      206C6F6E 
+ 1336      6720756E 
+ 1336      7369676E 
+ 1336      65642069 
+ 1337              	.LASF38:
+ 1338 01b0 4C43445F 		.ascii	"LCD_Position\000"
+ 1338      506F7369 
+ 1338      74696F6E 
+ 1338      00
+ 1339              	.LASF40:
+ 1340 01bd 4C43445F 		.ascii	"LCD_PrintU32Number\000"
+ 1340      5072696E 
+ 1340      74553332 
+ 1340      4E756D62 
+ 1340      657200
+ 1341              	.LASF31:
+ 1342 01d0 4144534B 		.ascii	"ADSK_Write\000"
+ 1342      5F577269 
+ 1342      746500
+ 1343              	.LASF28:
+ 1344 01db 56414443 		.ascii	"VADC\000"
+ 1344      00
+ 1345              	.LASF26:
+ 1346 01e0 62616E5F 		.ascii	"ban_neg\000"
+ 1346      6E656700 
+ 1347              	.LASF17:
+ 1348 01e8 6C6F6E67 		.ascii	"long double\000"
+ 1348      20646F75 
+ 1348      626C6500 
+ 1349              	.LASF18:
+ 1350 01f4 73697A65 		.ascii	"sizetype\000"
+ 1350      74797065 
+ 1350      00
+ 1351              	.LASF6:
+ 1352 01fd 6C6F6E67 		.ascii	"long long int\000"
+ 1352      206C6F6E 
+ 1352      6720696E 
+ 1352      7400
+ 1353              	.LASF43:
+ 1354 020b 6D61696E 		.ascii	"main.c\000"
+ 1354      2E6300
+ 1355              	.LASF16:
+ 1356 0212 63686172 		.ascii	"char\000"
+ 1356      00
+ 1357              	.LASF41:
+ 1358 0217 4C43445F 		.ascii	"LCD_WriteControl\000"
+ 1358      57726974 
+ 1358      65436F6E 
+ 1358      74726F6C 
+ 1358      00
+ 1359              	.LASF21:
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccAb1MNX.s 			page 29
+
+
+ 1360 0228 636F756E 		.ascii	"count\000"
+ 1360      7400
+ 1361              	.LASF2:
+ 1362 022e 73686F72 		.ascii	"short int\000"
+ 1362      7420696E 
+ 1362      7400
+ 1363              	.LASF11:
+ 1364 0238 75696E74 		.ascii	"uint8\000"
+ 1364      3800
+ 1365              	.LASF32:
+ 1366 023e 4144444F 		.ascii	"ADDO_Read\000"
+ 1366      5F526561 
+ 1366      6400
+ 1367              	.LASF33:
+ 1368 0248 4144444F 		.ascii	"ADDO_Write\000"
+ 1368      5F577269 
+ 1368      746500
+ 1369              	.LASF4:
+ 1370 0253 6C6F6E67 		.ascii	"long int\000"
+ 1370      20696E74 
+ 1370      00
+ 1371              	.LASF27:
+ 1372 025c 636F6E74 		.ascii	"cont\000"
+ 1372      00
+ 1373              	.LASF23:
+ 1374 0261 62616E5F 		.ascii	"ban_cont\000"
+ 1374      636F6E74 
+ 1374      00
+ 1375              	.LASF0:
+ 1376 026a 7369676E 		.ascii	"signed char\000"
+ 1376      65642063 
+ 1376      68617200 
+ 1377              	.LASF44:
+ 1378 0276 433A5C55 		.ascii	"C:\\Users\\Usuario\\Downloads\\Practica_6\\Practica"
+ 1378      73657273 
+ 1378      5C557375 
+ 1378      6172696F 
+ 1378      5C446F77 
+ 1379 02a4 5F362E63 		.ascii	"_6.cydsn\000"
+ 1379      7964736E 
+ 1379      00
+ 1380              	.LASF30:
+ 1381 02ad 5065736F 		.ascii	"Peso\000"
+ 1381      00
+ 1382              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

@@ -1,0 +1,849 @@
+ARM GAS  C:\Users\LENOVO~1\AppData\Local\Temp\ccjMi7gl.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"main.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.main,"ax",%progbits
+  20              		.align	2
+  21              		.global	main
+  22              		.thumb
+  23              		.thumb_func
+  24              		.type	main, %function
+  25              	main:
+  26              	.LFB63:
+  27              		.file 1 "main.c"
+   1:main.c        **** /*
+   2:main.c        **** ==========================================
+   3:main.c        ****     Created on Mon Jan 8 15:09:13 2021
+   4:main.c        **** 
+   5:main.c        ****     @author: Carlos Mateo Jurado Díaz
+   6:main.c        **** ==========================================
+   7:main.c        **** */
+   8:main.c        **** 
+   9:main.c        **** #include "project.h"
+  10:main.c        **** 
+  11:main.c        **** uint32 datos=0;
+  12:main.c        **** 
+  13:main.c        **** int main(void)
+  14:main.c        **** {
+  28              		.loc 1 14 0
+  29              		.cfi_startproc
+  30              		@ Volatile: function does not return.
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33 0000 08B5     		push	{r3, lr}
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 3, -8
+  36              		.cfi_offset 14, -4
+  15:main.c        ****     CyGlobalIntEnable;
+  37              		.loc 1 15 0
+  38              		.syntax unified
+  39              	@ 15 "main.c" 1
+  40 0002 62B6     		CPSIE   i
+  41              	@ 0 "" 2
+  16:main.c        ****     
+ARM GAS  C:\Users\LENOVO~1\AppData\Local\Temp\ccjMi7gl.s 			page 2
+
+
+  17:main.c        ****     UART_Start();
+  42              		.loc 1 17 0
+  43              		.thumb
+  44              		.syntax unified
+  45 0004 FFF7FEFF 		bl	UART_Start
+  46              	.LVL0:
+  18:main.c        ****     ADC_Start();
+  47              		.loc 1 18 0
+  48 0008 FFF7FEFF 		bl	ADC_Start
+  49              	.LVL1:
+  19:main.c        ****     ADC_SetScaledGain(8190);
+  50              		.loc 1 19 0
+  51 000c 41F6FE70 		movw	r0, #8190
+  52 0010 FFF7FEFF 		bl	ADC_SetScaledGain
+  53              	.LVL2:
+  54              	.L2:
+  20:main.c        **** 
+  21:main.c        ****     for(;;)
+  22:main.c        ****     {
+  23:main.c        ****         ADC_StartConvert(); 
+  55              		.loc 1 23 0 discriminator 1
+  56 0014 FFF7FEFF 		bl	ADC_StartConvert
+  57              	.LVL3:
+  24:main.c        ****         ADC_IsEndConversion(ADC_WAIT_FOR_RESULT); 
+  58              		.loc 1 24 0 discriminator 1
+  59 0018 0020     		movs	r0, #0
+  60 001a FFF7FEFF 		bl	ADC_IsEndConversion
+  61              	.LVL4:
+  25:main.c        ****         datos=ADC_GetResult16();ADC_StartConvert();
+  62              		.loc 1 25 0 discriminator 1
+  63 001e FFF7FEFF 		bl	ADC_GetResult16
+  64              	.LVL5:
+  65 0022 254D     		ldr	r5, .L4
+  66 0024 2860     		str	r0, [r5]
+  67 0026 FFF7FEFF 		bl	ADC_StartConvert
+  68              	.LVL6:
+  26:main.c        **** 
+  27:main.c        ****         UART_PutChar('b');
+  69              		.loc 1 27 0 discriminator 1
+  70 002a 6220     		movs	r0, #98
+  71 002c FFF7FEFF 		bl	UART_PutChar
+  72              	.LVL7:
+  28:main.c        ****         
+  29:main.c        ****         UART_PutChar(((datos/1000)%10)+48);
+  73              		.loc 1 29 0 discriminator 1
+  74 0030 2B68     		ldr	r3, [r5]
+  75 0032 224A     		ldr	r2, .L4+4
+  76 0034 A2FB0323 		umull	r2, r3, r2, r3
+  77 0038 9B09     		lsrs	r3, r3, #6
+  78 003a 214C     		ldr	r4, .L4+8
+  79 003c A4FB0320 		umull	r2, r0, r4, r3
+  80 0040 C008     		lsrs	r0, r0, #3
+  81 0042 00EB8000 		add	r0, r0, r0, lsl #2
+  82 0046 4200     		lsls	r2, r0, #1
+  83 0048 981A     		subs	r0, r3, r2
+  84 004a 3030     		adds	r0, r0, #48
+  85 004c C0B2     		uxtb	r0, r0
+ARM GAS  C:\Users\LENOVO~1\AppData\Local\Temp\ccjMi7gl.s 			page 3
+
+
+  86 004e FFF7FEFF 		bl	UART_PutChar
+  87              	.LVL8:
+  30:main.c        ****         UART_PutChar(((datos/100)%10)+48);
+  88              		.loc 1 30 0 discriminator 1
+  89 0052 2B68     		ldr	r3, [r5]
+  90 0054 1B4A     		ldr	r2, .L4+12
+  91 0056 A2FB0323 		umull	r2, r3, r2, r3
+  92 005a 5B09     		lsrs	r3, r3, #5
+  93 005c A4FB0320 		umull	r2, r0, r4, r3
+  94 0060 C008     		lsrs	r0, r0, #3
+  95 0062 00EB8000 		add	r0, r0, r0, lsl #2
+  96 0066 4200     		lsls	r2, r0, #1
+  97 0068 981A     		subs	r0, r3, r2
+  98 006a 3030     		adds	r0, r0, #48
+  99 006c C0B2     		uxtb	r0, r0
+ 100 006e FFF7FEFF 		bl	UART_PutChar
+ 101              	.LVL9:
+  31:main.c        ****         UART_PutChar(((datos/10)%10)+48);
+ 102              		.loc 1 31 0 discriminator 1
+ 103 0072 2B68     		ldr	r3, [r5]
+ 104 0074 A4FB0323 		umull	r2, r3, r4, r3
+ 105 0078 DB08     		lsrs	r3, r3, #3
+ 106 007a A4FB0320 		umull	r2, r0, r4, r3
+ 107 007e C008     		lsrs	r0, r0, #3
+ 108 0080 00EB8000 		add	r0, r0, r0, lsl #2
+ 109 0084 4200     		lsls	r2, r0, #1
+ 110 0086 981A     		subs	r0, r3, r2
+ 111 0088 3030     		adds	r0, r0, #48
+ 112 008a C0B2     		uxtb	r0, r0
+ 113 008c FFF7FEFF 		bl	UART_PutChar
+ 114              	.LVL10:
+  32:main.c        ****         UART_PutChar((datos%10)+48);
+ 115              		.loc 1 32 0 discriminator 1
+ 116 0090 2B68     		ldr	r3, [r5]
+ 117 0092 A4FB0320 		umull	r2, r0, r4, r3
+ 118 0096 C008     		lsrs	r0, r0, #3
+ 119 0098 00EB8000 		add	r0, r0, r0, lsl #2
+ 120 009c 4400     		lsls	r4, r0, #1
+ 121 009e 181B     		subs	r0, r3, r4
+ 122 00a0 3030     		adds	r0, r0, #48
+ 123 00a2 C0B2     		uxtb	r0, r0
+ 124 00a4 FFF7FEFF 		bl	UART_PutChar
+ 125              	.LVL11:
+  33:main.c        ****         
+  34:main.c        ****         UART_PutChar('c');
+ 126              		.loc 1 34 0 discriminator 1
+ 127 00a8 6320     		movs	r0, #99
+ 128 00aa FFF7FEFF 		bl	UART_PutChar
+ 129              	.LVL12:
+  35:main.c        ****         
+  36:main.c        ****         CyDelay(10);
+ 130              		.loc 1 36 0 discriminator 1
+ 131 00ae 0A20     		movs	r0, #10
+ 132 00b0 FFF7FEFF 		bl	CyDelay
+ 133              	.LVL13:
+ 134 00b4 AEE7     		b	.L2
+ 135              	.L5:
+ARM GAS  C:\Users\LENOVO~1\AppData\Local\Temp\ccjMi7gl.s 			page 4
+
+
+ 136 00b6 00BF     		.align	2
+ 137              	.L4:
+ 138 00b8 00000000 		.word	.LANCHOR0
+ 139 00bc D34D6210 		.word	274877907
+ 140 00c0 CDCCCCCC 		.word	-858993459
+ 141 00c4 1F85EB51 		.word	1374389535
+ 142              		.cfi_endproc
+ 143              	.LFE63:
+ 144              		.size	main, .-main
+ 145              		.global	datos
+ 146              		.bss
+ 147              		.align	2
+ 148              		.set	.LANCHOR0,. + 0
+ 149              		.type	datos, %object
+ 150              		.size	datos, 4
+ 151              	datos:
+ 152 0000 00000000 		.space	4
+ 153              		.text
+ 154              	.Letext0:
+ 155              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 156              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 157              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+ 158              		.file 5 "Generated_Source\\PSoC5/core_cm3.h"
+ 159              		.file 6 "Generated_Source\\PSoC5/UART.h"
+ 160              		.file 7 "Generated_Source\\PSoC5/ADC.h"
+ 161              		.file 8 "Generated_Source\\PSoC5/CyLib.h"
+ 162              		.section	.debug_info,"",%progbits
+ 163              	.Ldebug_info0:
+ 164 0000 F1010000 		.4byte	0x1f1
+ 165 0004 0400     		.2byte	0x4
+ 166 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 167 000a 04       		.byte	0x4
+ 168 000b 01       		.uleb128 0x1
+ 169 000c 37000000 		.4byte	.LASF27
+ 170 0010 0C       		.byte	0xc
+ 171 0011 E2010000 		.4byte	.LASF28
+ 172 0015 49010000 		.4byte	.LASF29
+ 173 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 174 001d 00000000 		.4byte	0
+ 175 0021 00000000 		.4byte	.Ldebug_line0
+ 176 0025 02       		.uleb128 0x2
+ 177 0026 01       		.byte	0x1
+ 178 0027 06       		.byte	0x6
+ 179 0028 0D020000 		.4byte	.LASF0
+ 180 002c 02       		.uleb128 0x2
+ 181 002d 01       		.byte	0x1
+ 182 002e 08       		.byte	0x8
+ 183 002f 29000000 		.4byte	.LASF1
+ 184 0033 02       		.uleb128 0x2
+ 185 0034 02       		.byte	0x2
+ 186 0035 05       		.byte	0x5
+ 187 0036 EE010000 		.4byte	.LASF2
+ 188 003a 02       		.uleb128 0x2
+ 189 003b 02       		.byte	0x2
+ 190 003c 07       		.byte	0x7
+ 191 003d F0000000 		.4byte	.LASF3
+ 192 0041 03       		.uleb128 0x3
+ARM GAS  C:\Users\LENOVO~1\AppData\Local\Temp\ccjMi7gl.s 			page 5
+
+
+ 193 0042 12000000 		.4byte	.LASF9
+ 194 0046 02       		.byte	0x2
+ 195 0047 3F       		.byte	0x3f
+ 196 0048 4C000000 		.4byte	0x4c
+ 197 004c 02       		.uleb128 0x2
+ 198 004d 04       		.byte	0x4
+ 199 004e 05       		.byte	0x5
+ 200 004f F8010000 		.4byte	.LASF4
+ 201 0053 02       		.uleb128 0x2
+ 202 0054 04       		.byte	0x4
+ 203 0055 07       		.byte	0x7
+ 204 0056 2B010000 		.4byte	.LASF5
+ 205 005a 02       		.uleb128 0x2
+ 206 005b 08       		.byte	0x8
+ 207 005c 05       		.byte	0x5
+ 208 005d D4010000 		.4byte	.LASF6
+ 209 0061 02       		.uleb128 0x2
+ 210 0062 08       		.byte	0x8
+ 211 0063 07       		.byte	0x7
+ 212 0064 95010000 		.4byte	.LASF7
+ 213 0068 04       		.uleb128 0x4
+ 214 0069 04       		.byte	0x4
+ 215 006a 05       		.byte	0x5
+ 216 006b 696E7400 		.ascii	"int\000"
+ 217 006f 02       		.uleb128 0x2
+ 218 0070 04       		.byte	0x4
+ 219 0071 07       		.byte	0x7
+ 220 0072 88010000 		.4byte	.LASF8
+ 221 0076 03       		.uleb128 0x3
+ 222 0077 B6010000 		.4byte	.LASF10
+ 223 007b 03       		.byte	0x3
+ 224 007c 2C       		.byte	0x2c
+ 225 007d 41000000 		.4byte	0x41
+ 226 0081 05       		.uleb128 0x5
+ 227 0082 42010000 		.4byte	.LASF11
+ 228 0086 04       		.byte	0x4
+ 229 0087 EA01     		.2byte	0x1ea
+ 230 0089 53000000 		.4byte	0x53
+ 231 008d 02       		.uleb128 0x2
+ 232 008e 04       		.byte	0x4
+ 233 008f 04       		.byte	0x4
+ 234 0090 23000000 		.4byte	.LASF12
+ 235 0094 02       		.uleb128 0x2
+ 236 0095 08       		.byte	0x8
+ 237 0096 04       		.byte	0x4
+ 238 0097 1C000000 		.4byte	.LASF13
+ 239 009b 02       		.uleb128 0x2
+ 240 009c 01       		.byte	0x1
+ 241 009d 08       		.byte	0x8
+ 242 009e E9010000 		.4byte	.LASF14
+ 243 00a2 02       		.uleb128 0x2
+ 244 00a3 08       		.byte	0x8
+ 245 00a4 04       		.byte	0x4
+ 246 00a5 01020000 		.4byte	.LASF15
+ 247 00a9 02       		.uleb128 0x2
+ 248 00aa 04       		.byte	0x4
+ 249 00ab 07       		.byte	0x7
+ARM GAS  C:\Users\LENOVO~1\AppData\Local\Temp\ccjMi7gl.s 			page 6
+
+
+ 250 00ac CB010000 		.4byte	.LASF16
+ 251 00b0 06       		.uleb128 0x6
+ 252 00b1 3D010000 		.4byte	.LASF30
+ 253 00b5 01       		.byte	0x1
+ 254 00b6 0D       		.byte	0xd
+ 255 00b7 68000000 		.4byte	0x68
+ 256 00bb 00000000 		.4byte	.LFB63
+ 257 00bf C8000000 		.4byte	.LFE63-.LFB63
+ 258 00c3 01       		.uleb128 0x1
+ 259 00c4 9C       		.byte	0x9c
+ 260 00c5 7A010000 		.4byte	0x17a
+ 261 00c9 07       		.uleb128 0x7
+ 262 00ca 08000000 		.4byte	.LVL0
+ 263 00ce 9C010000 		.4byte	0x19c
+ 264 00d2 07       		.uleb128 0x7
+ 265 00d3 0C000000 		.4byte	.LVL1
+ 266 00d7 A7010000 		.4byte	0x1a7
+ 267 00db 08       		.uleb128 0x8
+ 268 00dc 14000000 		.4byte	.LVL2
+ 269 00e0 B2010000 		.4byte	0x1b2
+ 270 00e4 F0000000 		.4byte	0xf0
+ 271 00e8 09       		.uleb128 0x9
+ 272 00e9 01       		.uleb128 0x1
+ 273 00ea 50       		.byte	0x50
+ 274 00eb 03       		.uleb128 0x3
+ 275 00ec 0A       		.byte	0xa
+ 276 00ed FE1F     		.2byte	0x1ffe
+ 277 00ef 00       		.byte	0
+ 278 00f0 07       		.uleb128 0x7
+ 279 00f1 18000000 		.4byte	.LVL3
+ 280 00f5 BD010000 		.4byte	0x1bd
+ 281 00f9 08       		.uleb128 0x8
+ 282 00fa 1E000000 		.4byte	.LVL4
+ 283 00fe C8010000 		.4byte	0x1c8
+ 284 0102 0C010000 		.4byte	0x10c
+ 285 0106 09       		.uleb128 0x9
+ 286 0107 01       		.uleb128 0x1
+ 287 0108 50       		.byte	0x50
+ 288 0109 01       		.uleb128 0x1
+ 289 010a 30       		.byte	0x30
+ 290 010b 00       		.byte	0
+ 291 010c 07       		.uleb128 0x7
+ 292 010d 22000000 		.4byte	.LVL5
+ 293 0111 D3010000 		.4byte	0x1d3
+ 294 0115 07       		.uleb128 0x7
+ 295 0116 2A000000 		.4byte	.LVL6
+ 296 011a BD010000 		.4byte	0x1bd
+ 297 011e 08       		.uleb128 0x8
+ 298 011f 30000000 		.4byte	.LVL7
+ 299 0123 DE010000 		.4byte	0x1de
+ 300 0127 32010000 		.4byte	0x132
+ 301 012b 09       		.uleb128 0x9
+ 302 012c 01       		.uleb128 0x1
+ 303 012d 50       		.byte	0x50
+ 304 012e 02       		.uleb128 0x2
+ 305 012f 08       		.byte	0x8
+ 306 0130 62       		.byte	0x62
+ARM GAS  C:\Users\LENOVO~1\AppData\Local\Temp\ccjMi7gl.s 			page 7
+
+
+ 307 0131 00       		.byte	0
+ 308 0132 07       		.uleb128 0x7
+ 309 0133 52000000 		.4byte	.LVL8
+ 310 0137 DE010000 		.4byte	0x1de
+ 311 013b 07       		.uleb128 0x7
+ 312 013c 72000000 		.4byte	.LVL9
+ 313 0140 DE010000 		.4byte	0x1de
+ 314 0144 07       		.uleb128 0x7
+ 315 0145 90000000 		.4byte	.LVL10
+ 316 0149 DE010000 		.4byte	0x1de
+ 317 014d 07       		.uleb128 0x7
+ 318 014e A8000000 		.4byte	.LVL11
+ 319 0152 DE010000 		.4byte	0x1de
+ 320 0156 08       		.uleb128 0x8
+ 321 0157 AE000000 		.4byte	.LVL12
+ 322 015b DE010000 		.4byte	0x1de
+ 323 015f 6A010000 		.4byte	0x16a
+ 324 0163 09       		.uleb128 0x9
+ 325 0164 01       		.uleb128 0x1
+ 326 0165 50       		.byte	0x50
+ 327 0166 02       		.uleb128 0x2
+ 328 0167 08       		.byte	0x8
+ 329 0168 63       		.byte	0x63
+ 330 0169 00       		.byte	0
+ 331 016a 0A       		.uleb128 0xa
+ 332 016b B4000000 		.4byte	.LVL13
+ 333 016f E9010000 		.4byte	0x1e9
+ 334 0173 09       		.uleb128 0x9
+ 335 0174 01       		.uleb128 0x1
+ 336 0175 50       		.byte	0x50
+ 337 0176 01       		.uleb128 0x1
+ 338 0177 3A       		.byte	0x3a
+ 339 0178 00       		.byte	0
+ 340 0179 00       		.byte	0
+ 341 017a 0B       		.uleb128 0xb
+ 342 017b 1E010000 		.4byte	.LASF17
+ 343 017f 05       		.byte	0x5
+ 344 0180 1207     		.2byte	0x712
+ 345 0182 86010000 		.4byte	0x186
+ 346 0186 0C       		.uleb128 0xc
+ 347 0187 76000000 		.4byte	0x76
+ 348 018b 0D       		.uleb128 0xd
+ 349 018c D6000000 		.4byte	.LASF18
+ 350 0190 01       		.byte	0x1
+ 351 0191 0B       		.byte	0xb
+ 352 0192 81000000 		.4byte	0x81
+ 353 0196 05       		.uleb128 0x5
+ 354 0197 03       		.byte	0x3
+ 355 0198 00000000 		.4byte	datos
+ 356 019c 0E       		.uleb128 0xe
+ 357 019d 03010000 		.4byte	.LASF19
+ 358 01a1 03010000 		.4byte	.LASF19
+ 359 01a5 06       		.byte	0x6
+ 360 01a6 54       		.byte	0x54
+ 361 01a7 0E       		.uleb128 0xe
+ 362 01a8 AC010000 		.4byte	.LASF20
+ 363 01ac AC010000 		.4byte	.LASF20
+ARM GAS  C:\Users\LENOVO~1\AppData\Local\Temp\ccjMi7gl.s 			page 8
+
+
+ 364 01b0 07       		.byte	0x7
+ 365 01b1 34       		.byte	0x34
+ 366 01b2 0E       		.uleb128 0xe
+ 367 01b3 00000000 		.4byte	.LASF21
+ 368 01b7 00000000 		.4byte	.LASF21
+ 369 01bb 07       		.byte	0x7
+ 370 01bc 3E       		.byte	0x3e
+ 371 01bd 0E       		.uleb128 0xe
+ 372 01be C5000000 		.4byte	.LASF22
+ 373 01c2 C5000000 		.4byte	.LASF22
+ 374 01c6 07       		.byte	0x7
+ 375 01c7 D1       		.byte	0xd1
+ 376 01c8 0E       		.uleb128 0xe
+ 377 01c9 DC000000 		.4byte	.LASF23
+ 378 01cd DC000000 		.4byte	.LASF23
+ 379 01d1 07       		.byte	0x7
+ 380 01d2 39       		.byte	0x39
+ 381 01d3 0E       		.uleb128 0xe
+ 382 01d4 0E010000 		.4byte	.LASF24
+ 383 01d8 0E010000 		.4byte	.LASF24
+ 384 01dc 07       		.byte	0x7
+ 385 01dd 3B       		.byte	0x3b
+ 386 01de 0E       		.uleb128 0xe
+ 387 01df BE010000 		.4byte	.LASF25
+ 388 01e3 BE010000 		.4byte	.LASF25
+ 389 01e7 06       		.byte	0x6
+ 390 01e8 8A       		.byte	0x8a
+ 391 01e9 0E       		.uleb128 0xe
+ 392 01ea 19020000 		.4byte	.LASF26
+ 393 01ee 19020000 		.4byte	.LASF26
+ 394 01f2 08       		.byte	0x8
+ 395 01f3 76       		.byte	0x76
+ 396 01f4 00       		.byte	0
+ 397              		.section	.debug_abbrev,"",%progbits
+ 398              	.Ldebug_abbrev0:
+ 399 0000 01       		.uleb128 0x1
+ 400 0001 11       		.uleb128 0x11
+ 401 0002 01       		.byte	0x1
+ 402 0003 25       		.uleb128 0x25
+ 403 0004 0E       		.uleb128 0xe
+ 404 0005 13       		.uleb128 0x13
+ 405 0006 0B       		.uleb128 0xb
+ 406 0007 03       		.uleb128 0x3
+ 407 0008 0E       		.uleb128 0xe
+ 408 0009 1B       		.uleb128 0x1b
+ 409 000a 0E       		.uleb128 0xe
+ 410 000b 55       		.uleb128 0x55
+ 411 000c 17       		.uleb128 0x17
+ 412 000d 11       		.uleb128 0x11
+ 413 000e 01       		.uleb128 0x1
+ 414 000f 10       		.uleb128 0x10
+ 415 0010 17       		.uleb128 0x17
+ 416 0011 00       		.byte	0
+ 417 0012 00       		.byte	0
+ 418 0013 02       		.uleb128 0x2
+ 419 0014 24       		.uleb128 0x24
+ 420 0015 00       		.byte	0
+ARM GAS  C:\Users\LENOVO~1\AppData\Local\Temp\ccjMi7gl.s 			page 9
+
+
+ 421 0016 0B       		.uleb128 0xb
+ 422 0017 0B       		.uleb128 0xb
+ 423 0018 3E       		.uleb128 0x3e
+ 424 0019 0B       		.uleb128 0xb
+ 425 001a 03       		.uleb128 0x3
+ 426 001b 0E       		.uleb128 0xe
+ 427 001c 00       		.byte	0
+ 428 001d 00       		.byte	0
+ 429 001e 03       		.uleb128 0x3
+ 430 001f 16       		.uleb128 0x16
+ 431 0020 00       		.byte	0
+ 432 0021 03       		.uleb128 0x3
+ 433 0022 0E       		.uleb128 0xe
+ 434 0023 3A       		.uleb128 0x3a
+ 435 0024 0B       		.uleb128 0xb
+ 436 0025 3B       		.uleb128 0x3b
+ 437 0026 0B       		.uleb128 0xb
+ 438 0027 49       		.uleb128 0x49
+ 439 0028 13       		.uleb128 0x13
+ 440 0029 00       		.byte	0
+ 441 002a 00       		.byte	0
+ 442 002b 04       		.uleb128 0x4
+ 443 002c 24       		.uleb128 0x24
+ 444 002d 00       		.byte	0
+ 445 002e 0B       		.uleb128 0xb
+ 446 002f 0B       		.uleb128 0xb
+ 447 0030 3E       		.uleb128 0x3e
+ 448 0031 0B       		.uleb128 0xb
+ 449 0032 03       		.uleb128 0x3
+ 450 0033 08       		.uleb128 0x8
+ 451 0034 00       		.byte	0
+ 452 0035 00       		.byte	0
+ 453 0036 05       		.uleb128 0x5
+ 454 0037 16       		.uleb128 0x16
+ 455 0038 00       		.byte	0
+ 456 0039 03       		.uleb128 0x3
+ 457 003a 0E       		.uleb128 0xe
+ 458 003b 3A       		.uleb128 0x3a
+ 459 003c 0B       		.uleb128 0xb
+ 460 003d 3B       		.uleb128 0x3b
+ 461 003e 05       		.uleb128 0x5
+ 462 003f 49       		.uleb128 0x49
+ 463 0040 13       		.uleb128 0x13
+ 464 0041 00       		.byte	0
+ 465 0042 00       		.byte	0
+ 466 0043 06       		.uleb128 0x6
+ 467 0044 2E       		.uleb128 0x2e
+ 468 0045 01       		.byte	0x1
+ 469 0046 3F       		.uleb128 0x3f
+ 470 0047 19       		.uleb128 0x19
+ 471 0048 03       		.uleb128 0x3
+ 472 0049 0E       		.uleb128 0xe
+ 473 004a 3A       		.uleb128 0x3a
+ 474 004b 0B       		.uleb128 0xb
+ 475 004c 3B       		.uleb128 0x3b
+ 476 004d 0B       		.uleb128 0xb
+ 477 004e 27       		.uleb128 0x27
+ARM GAS  C:\Users\LENOVO~1\AppData\Local\Temp\ccjMi7gl.s 			page 10
+
+
+ 478 004f 19       		.uleb128 0x19
+ 479 0050 49       		.uleb128 0x49
+ 480 0051 13       		.uleb128 0x13
+ 481 0052 8701     		.uleb128 0x87
+ 482 0054 19       		.uleb128 0x19
+ 483 0055 11       		.uleb128 0x11
+ 484 0056 01       		.uleb128 0x1
+ 485 0057 12       		.uleb128 0x12
+ 486 0058 06       		.uleb128 0x6
+ 487 0059 40       		.uleb128 0x40
+ 488 005a 18       		.uleb128 0x18
+ 489 005b 9742     		.uleb128 0x2117
+ 490 005d 19       		.uleb128 0x19
+ 491 005e 01       		.uleb128 0x1
+ 492 005f 13       		.uleb128 0x13
+ 493 0060 00       		.byte	0
+ 494 0061 00       		.byte	0
+ 495 0062 07       		.uleb128 0x7
+ 496 0063 898201   		.uleb128 0x4109
+ 497 0066 00       		.byte	0
+ 498 0067 11       		.uleb128 0x11
+ 499 0068 01       		.uleb128 0x1
+ 500 0069 31       		.uleb128 0x31
+ 501 006a 13       		.uleb128 0x13
+ 502 006b 00       		.byte	0
+ 503 006c 00       		.byte	0
+ 504 006d 08       		.uleb128 0x8
+ 505 006e 898201   		.uleb128 0x4109
+ 506 0071 01       		.byte	0x1
+ 507 0072 11       		.uleb128 0x11
+ 508 0073 01       		.uleb128 0x1
+ 509 0074 31       		.uleb128 0x31
+ 510 0075 13       		.uleb128 0x13
+ 511 0076 01       		.uleb128 0x1
+ 512 0077 13       		.uleb128 0x13
+ 513 0078 00       		.byte	0
+ 514 0079 00       		.byte	0
+ 515 007a 09       		.uleb128 0x9
+ 516 007b 8A8201   		.uleb128 0x410a
+ 517 007e 00       		.byte	0
+ 518 007f 02       		.uleb128 0x2
+ 519 0080 18       		.uleb128 0x18
+ 520 0081 9142     		.uleb128 0x2111
+ 521 0083 18       		.uleb128 0x18
+ 522 0084 00       		.byte	0
+ 523 0085 00       		.byte	0
+ 524 0086 0A       		.uleb128 0xa
+ 525 0087 898201   		.uleb128 0x4109
+ 526 008a 01       		.byte	0x1
+ 527 008b 11       		.uleb128 0x11
+ 528 008c 01       		.uleb128 0x1
+ 529 008d 31       		.uleb128 0x31
+ 530 008e 13       		.uleb128 0x13
+ 531 008f 00       		.byte	0
+ 532 0090 00       		.byte	0
+ 533 0091 0B       		.uleb128 0xb
+ 534 0092 34       		.uleb128 0x34
+ARM GAS  C:\Users\LENOVO~1\AppData\Local\Temp\ccjMi7gl.s 			page 11
+
+
+ 535 0093 00       		.byte	0
+ 536 0094 03       		.uleb128 0x3
+ 537 0095 0E       		.uleb128 0xe
+ 538 0096 3A       		.uleb128 0x3a
+ 539 0097 0B       		.uleb128 0xb
+ 540 0098 3B       		.uleb128 0x3b
+ 541 0099 05       		.uleb128 0x5
+ 542 009a 49       		.uleb128 0x49
+ 543 009b 13       		.uleb128 0x13
+ 544 009c 3F       		.uleb128 0x3f
+ 545 009d 19       		.uleb128 0x19
+ 546 009e 3C       		.uleb128 0x3c
+ 547 009f 19       		.uleb128 0x19
+ 548 00a0 00       		.byte	0
+ 549 00a1 00       		.byte	0
+ 550 00a2 0C       		.uleb128 0xc
+ 551 00a3 35       		.uleb128 0x35
+ 552 00a4 00       		.byte	0
+ 553 00a5 49       		.uleb128 0x49
+ 554 00a6 13       		.uleb128 0x13
+ 555 00a7 00       		.byte	0
+ 556 00a8 00       		.byte	0
+ 557 00a9 0D       		.uleb128 0xd
+ 558 00aa 34       		.uleb128 0x34
+ 559 00ab 00       		.byte	0
+ 560 00ac 03       		.uleb128 0x3
+ 561 00ad 0E       		.uleb128 0xe
+ 562 00ae 3A       		.uleb128 0x3a
+ 563 00af 0B       		.uleb128 0xb
+ 564 00b0 3B       		.uleb128 0x3b
+ 565 00b1 0B       		.uleb128 0xb
+ 566 00b2 49       		.uleb128 0x49
+ 567 00b3 13       		.uleb128 0x13
+ 568 00b4 3F       		.uleb128 0x3f
+ 569 00b5 19       		.uleb128 0x19
+ 570 00b6 02       		.uleb128 0x2
+ 571 00b7 18       		.uleb128 0x18
+ 572 00b8 00       		.byte	0
+ 573 00b9 00       		.byte	0
+ 574 00ba 0E       		.uleb128 0xe
+ 575 00bb 2E       		.uleb128 0x2e
+ 576 00bc 00       		.byte	0
+ 577 00bd 3F       		.uleb128 0x3f
+ 578 00be 19       		.uleb128 0x19
+ 579 00bf 3C       		.uleb128 0x3c
+ 580 00c0 19       		.uleb128 0x19
+ 581 00c1 6E       		.uleb128 0x6e
+ 582 00c2 0E       		.uleb128 0xe
+ 583 00c3 03       		.uleb128 0x3
+ 584 00c4 0E       		.uleb128 0xe
+ 585 00c5 3A       		.uleb128 0x3a
+ 586 00c6 0B       		.uleb128 0xb
+ 587 00c7 3B       		.uleb128 0x3b
+ 588 00c8 0B       		.uleb128 0xb
+ 589 00c9 00       		.byte	0
+ 590 00ca 00       		.byte	0
+ 591 00cb 00       		.byte	0
+ARM GAS  C:\Users\LENOVO~1\AppData\Local\Temp\ccjMi7gl.s 			page 12
+
+
+ 592              		.section	.debug_aranges,"",%progbits
+ 593 0000 1C000000 		.4byte	0x1c
+ 594 0004 0200     		.2byte	0x2
+ 595 0006 00000000 		.4byte	.Ldebug_info0
+ 596 000a 04       		.byte	0x4
+ 597 000b 00       		.byte	0
+ 598 000c 0000     		.2byte	0
+ 599 000e 0000     		.2byte	0
+ 600 0010 00000000 		.4byte	.LFB63
+ 601 0014 C8000000 		.4byte	.LFE63-.LFB63
+ 602 0018 00000000 		.4byte	0
+ 603 001c 00000000 		.4byte	0
+ 604              		.section	.debug_ranges,"",%progbits
+ 605              	.Ldebug_ranges0:
+ 606 0000 00000000 		.4byte	.LFB63
+ 607 0004 C8000000 		.4byte	.LFE63
+ 608 0008 00000000 		.4byte	0
+ 609 000c 00000000 		.4byte	0
+ 610              		.section	.debug_line,"",%progbits
+ 611              	.Ldebug_line0:
+ 612 0000 B6010000 		.section	.debug_str,"MS",%progbits,1
+ 612      02006A01 
+ 612      00000201 
+ 612      FB0E0D00 
+ 612      01010101 
+ 613              	.LASF21:
+ 614 0000 4144435F 		.ascii	"ADC_SetScaledGain\000"
+ 614      53657453 
+ 614      63616C65 
+ 614      64476169 
+ 614      6E00
+ 615              	.LASF9:
+ 616 0012 5F5F696E 		.ascii	"__int32_t\000"
+ 616      7433325F 
+ 616      7400
+ 617              	.LASF13:
+ 618 001c 646F7562 		.ascii	"double\000"
+ 618      6C6500
+ 619              	.LASF12:
+ 620 0023 666C6F61 		.ascii	"float\000"
+ 620      7400
+ 621              	.LASF1:
+ 622 0029 756E7369 		.ascii	"unsigned char\000"
+ 622      676E6564 
+ 622      20636861 
+ 622      7200
+ 623              	.LASF27:
+ 624 0037 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 624      43313120 
+ 624      352E342E 
+ 624      31203230 
+ 624      31363036 
+ 625 006a 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m3 -mthumb -g -O"
+ 625      20726576 
+ 625      6973696F 
+ 625      6E203233 
+ 625      37373135 
+ARM GAS  C:\Users\LENOVO~1\AppData\Local\Temp\ccjMi7gl.s 			page 13
+
+
+ 626 009d 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 626      66756E63 
+ 626      74696F6E 
+ 626      2D736563 
+ 626      74696F6E 
+ 627              	.LASF22:
+ 628 00c5 4144435F 		.ascii	"ADC_StartConvert\000"
+ 628      53746172 
+ 628      74436F6E 
+ 628      76657274 
+ 628      00
+ 629              	.LASF18:
+ 630 00d6 6461746F 		.ascii	"datos\000"
+ 630      7300
+ 631              	.LASF23:
+ 632 00dc 4144435F 		.ascii	"ADC_IsEndConversion\000"
+ 632      4973456E 
+ 632      64436F6E 
+ 632      76657273 
+ 632      696F6E00 
+ 633              	.LASF3:
+ 634 00f0 73686F72 		.ascii	"short unsigned int\000"
+ 634      7420756E 
+ 634      7369676E 
+ 634      65642069 
+ 634      6E7400
+ 635              	.LASF19:
+ 636 0103 55415254 		.ascii	"UART_Start\000"
+ 636      5F537461 
+ 636      727400
+ 637              	.LASF24:
+ 638 010e 4144435F 		.ascii	"ADC_GetResult16\000"
+ 638      47657452 
+ 638      6573756C 
+ 638      74313600 
+ 639              	.LASF17:
+ 640 011e 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 640      52784275 
+ 640      66666572 
+ 640      00
+ 641              	.LASF5:
+ 642 012b 6C6F6E67 		.ascii	"long unsigned int\000"
+ 642      20756E73 
+ 642      69676E65 
+ 642      6420696E 
+ 642      7400
+ 643              	.LASF30:
+ 644 013d 6D61696E 		.ascii	"main\000"
+ 644      00
+ 645              	.LASF11:
+ 646 0142 75696E74 		.ascii	"uint32\000"
+ 646      333200
+ 647              	.LASF29:
+ 648 0149 433A5C55 		.ascii	"C:\\Users\\Lenovo-PC\\Downloads\\Trabajo analogica\\"
+ 648      73657273 
+ 648      5C4C656E 
+ 648      6F766F2D 
+ARM GAS  C:\Users\LENOVO~1\AppData\Local\Temp\ccjMi7gl.s 			page 14
+
+
+ 648      50435C44 
+ 649 0178 50536F43 		.ascii	"PSoC\\PSoC.cydsn\000"
+ 649      5C50536F 
+ 649      432E6379 
+ 649      64736E00 
+ 650              	.LASF8:
+ 651 0188 756E7369 		.ascii	"unsigned int\000"
+ 651      676E6564 
+ 651      20696E74 
+ 651      00
+ 652              	.LASF7:
+ 653 0195 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 653      206C6F6E 
+ 653      6720756E 
+ 653      7369676E 
+ 653      65642069 
+ 654              	.LASF20:
+ 655 01ac 4144435F 		.ascii	"ADC_Start\000"
+ 655      53746172 
+ 655      7400
+ 656              	.LASF10:
+ 657 01b6 696E7433 		.ascii	"int32_t\000"
+ 657      325F7400 
+ 658              	.LASF25:
+ 659 01be 55415254 		.ascii	"UART_PutChar\000"
+ 659      5F507574 
+ 659      43686172 
+ 659      00
+ 660              	.LASF16:
+ 661 01cb 73697A65 		.ascii	"sizetype\000"
+ 661      74797065 
+ 661      00
+ 662              	.LASF6:
+ 663 01d4 6C6F6E67 		.ascii	"long long int\000"
+ 663      206C6F6E 
+ 663      6720696E 
+ 663      7400
+ 664              	.LASF28:
+ 665 01e2 6D61696E 		.ascii	"main.c\000"
+ 665      2E6300
+ 666              	.LASF14:
+ 667 01e9 63686172 		.ascii	"char\000"
+ 667      00
+ 668              	.LASF2:
+ 669 01ee 73686F72 		.ascii	"short int\000"
+ 669      7420696E 
+ 669      7400
+ 670              	.LASF4:
+ 671 01f8 6C6F6E67 		.ascii	"long int\000"
+ 671      20696E74 
+ 671      00
+ 672              	.LASF15:
+ 673 0201 6C6F6E67 		.ascii	"long double\000"
+ 673      20646F75 
+ 673      626C6500 
+ 674              	.LASF0:
+ 675 020d 7369676E 		.ascii	"signed char\000"
+ARM GAS  C:\Users\LENOVO~1\AppData\Local\Temp\ccjMi7gl.s 			page 15
+
+
+ 675      65642063 
+ 675      68617200 
+ 676              	.LASF26:
+ 677 0219 43794465 		.ascii	"CyDelay\000"
+ 677      6C617900 
+ 678              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

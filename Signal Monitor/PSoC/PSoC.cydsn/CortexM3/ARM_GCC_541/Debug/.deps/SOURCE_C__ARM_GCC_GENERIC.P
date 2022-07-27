@@ -1,0 +1,56 @@
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/CortexM3/ARM_GCC_541/Debug/main.o : C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/ADC.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/ADC_IRQ.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/ADC_theACLK.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/CyDmac.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/CyFlash.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/CyLib.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/CySpc.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/UART.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/UART_IntClock.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cmsis_armcc.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cmsis_compiler.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cmsis_gcc.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/core_cm3.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/core_cm3_psoc5.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cyPm.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cy_em_eeprom.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cydevice.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cydevice_trm.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cydisabledsheets.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cyfitter.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cyfitter_cfg.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cypins.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cytypes.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/project.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/senal.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/senal_aliases.h C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/main.c 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/ADC.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/ADC_IRQ.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/ADC_theACLK.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/CyDmac.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/CyFlash.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/CyLib.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/CySpc.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/UART.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/UART_IntClock.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cmsis_armcc.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cmsis_compiler.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cmsis_gcc.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/core_cm3.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/core_cm3_psoc5.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cyPm.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cy_em_eeprom.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cydevice.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cydevice_trm.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cydisabledsheets.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cyfitter.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cyfitter_cfg.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cypins.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/cytypes.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/project.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/senal.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/Generated_Source/PSoC5/senal_aliases.h : 
+
+C:/Users/Lenovo-PC/Downloads/Trabajo\ analogica/PSoC/PSoC.cydsn/main.c : 
+

@@ -1,0 +1,68 @@
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/CortexM3/ARM_GCC_541/Debug/main.o : D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/ADC.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/ADC_IRQ.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/ADC_theACLK.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/CyDmac.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/CyFlash.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/CyLib.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/CySpc.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/LCD.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/LCD_LCDPort.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/LCD_LCDPort_aliases.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/Vx.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/Vx_aliases.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/Vy.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/Vy_aliases.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/Vz.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/Vz_aliases.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cmsis_armcc.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cmsis_compiler.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cmsis_gcc.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/core_cm3.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/core_cm3_psoc5.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cyPm.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cy_em_eeprom.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cydevice.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cydevice_trm.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cydisabledsheets.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cyfitter.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cyfitter_cfg.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cypins.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cytypes.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/project.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/variables.h D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/main.c 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/ADC.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/ADC_IRQ.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/ADC_theACLK.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/CyDmac.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/CyFlash.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/CyLib.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/CySpc.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/LCD.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/LCD_LCDPort.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/LCD_LCDPort_aliases.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/Vx.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/Vx_aliases.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/Vy.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/Vy_aliases.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/Vz.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/Vz_aliases.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cmsis_armcc.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cmsis_compiler.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cmsis_gcc.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/core_cm3.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/core_cm3_psoc5.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cyPm.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cy_em_eeprom.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cydevice.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cydevice_trm.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cydisabledsheets.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cyfitter.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cyfitter_cfg.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cypins.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/cytypes.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/project.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/Generated_Source/PSoC5/variables.h : 
+
+D:/Mis\ documentos/Documents/Sensores/Practica_4/Practica_4.cydsn/main.c : 
+

@@ -1,0 +1,3317 @@
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"main.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.Contador,"ax",%progbits
+  20              		.align	2
+  21              		.global	Contador
+  22              		.thumb
+  23              		.thumb_func
+  24              		.type	Contador, %function
+  25              	Contador:
+  26              	.LFB65:
+  27              		.file 1 "main.c"
+   1:main.c        **** /* ========================================
+   2:main.c        ****  *
+   3:main.c        ****  * Copyright YOUR COMPANY, THE YEAR
+   4:main.c        ****  * All Rights Reserved
+   5:main.c        ****  * UNPUBLISHED, LICENSED SOFTWARE.
+   6:main.c        ****  *
+   7:main.c        ****  * CONFIDENTIAL AND PROPRIETARY INFORMATION
+   8:main.c        ****  * WHICH IS THE PROPERTY OF your company.
+   9:main.c        ****  *
+  10:main.c        ****  * ========================================
+  11:main.c        **** */
+  12:main.c        **** #include "project.h"
+  13:main.c        **** CY_ISR_PROTO(Medicion_1);//Interrupcion Boton_1 medicion del sensor al piso-->medicion1
+  14:main.c        **** CY_ISR_PROTO(Medicion_2);//Interrupcion Boton_2 medicion del sensor al objeto-->medicion2
+  15:main.c        **** CY_ISR_PROTO(ISR_Timer);//Interrupcion Timer
+  16:main.c        **** CY_ISR_PROTO(Contador);//Interrupcion contador
+  17:main.c        **** void Reinit(void); // Se declara la funcion de reinicio del sistema
+  18:main.c        **** uint16 VALADC=0; //valor ADC sensor de temperatura
+  19:main.c        **** uint32 Temperatura=0; // variable temperatura
+  20:main.c        **** int8 status=1;// estado del timer
+  21:main.c        **** int16 Count_M1=0;//contador medicion 1
+  22:main.c        **** int16 Count_M2=0;//contador medicion 2
+  23:main.c        **** int8 ban_M1=0;//Bandera interrupcion medicion 1
+  24:main.c        **** int8 ban_M2=0;//Bandera interrupcion medicion 2
+  25:main.c        **** int8 ban_M11=0;//Bandera contador medicion1 
+  26:main.c        **** int8 ban_M22=0;//Bandera contador medicion2
+  27:main.c        **** int8 ban_trig1=0;//Bandera Trigger PWM para medicion 1
+  28:main.c        **** int8 ban_trig2=0;//Bandera Trigger PWM para medicion 2
+  29:main.c        **** uint32 Velocidad=0;// variable velocidad de sonido
+  30:main.c        **** uint32 Distancia=0;// variable Distancia sensada
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 2
+
+
+  31:main.c        **** uint32 Distancia1=0;// variable Distancia medicion1
+  32:main.c        **** uint32 Distancia2=0;// variable Distancia medicion 2
+  33:main.c        **** uint32 Distancia3=0;// variable Distancia del objeto
+  34:main.c        **** int8 Calculos=1;//Bandera Calculo de mediciones 
+  35:main.c        **** uint32 valor1=0;//Valor datos en flanco de subida
+  36:main.c        **** uint32 valor2=0;//Valor datos en flanco de bajada
+  37:main.c        **** uint32 valor3=0;//Valor siguiente ciclo
+  38:main.c        **** uint8 ovf1=0;//Valor desbordamiento del Inputcapture 
+  39:main.c        **** uint8 ovf2=0;//Valor desbordamiento del Inputcapture
+  40:main.c        **** uint32 CiclosDureza=0;//Valor entre flanco de subida y flanco de bajada 
+  41:main.c        **** uint8 cont=0;//contador de registros 
+  42:main.c        **** 
+  43:main.c        **** int main(void)
+  44:main.c        **** {
+  45:main.c        ****     CyGlobalIntEnable; /* Enable global interrupts. */
+  46:main.c        ****        
+  47:main.c        ****     ADC_Start();//Inicializacion ADC
+  48:main.c        ****     LCD_Start();//Inicializacion LCD
+  49:main.c        ****     Timer_Start();//Inicializacion Timer
+  50:main.c        ****     PWM_Start();//Inicializacion PWM
+  51:main.c        ****     Counter_Start();//Inicializacion contador
+  52:main.c        ****     Timer_isr_StartEx(ISR_Timer);//Inicializacion funcion interrupcion Timer
+  53:main.c        ****     Contador_isr_StartEx(Contador);//Inicializacion funcion interrupcion contador
+  54:main.c        ****     Boton1_isr_StartEx(Medicion_1);//Inicializacion funcion interrupcion Boton1
+  55:main.c        ****     Boton2_isr_StartEx(Medicion_2);//Inicializacion funcion interrupcion Boton2
+  56:main.c        ****     Boton2_isr_Disable();//Boton2 comienza desabilitado
+  57:main.c        ****     Opamp_Start();//Inicializacion amplificador   
+  58:main.c        ****     
+  59:main.c        ****     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
+  60:main.c        **** 
+  61:main.c        ****     for(;;)
+  62:main.c        ****     {
+  63:main.c        ****         /* Place your application code here. */   
+  64:main.c        ****         ADC_StartConvert();//Comienza conversion a datos ADC
+  65:main.c        ****         ADC_IsEndConversion(ADC_WAIT_FOR_RESULT);//finaliza conversion a datos ADC
+  66:main.c        ****         VALADC = ADC_GetResult16();// Resultado de ADC
+  67:main.c        ****         Temperatura=(VALADC*1024/910)-100;//Ecuacion de temperatura (x10--> 1 decimal) basado en el
+  68:main.c        ****         if(Calculos)// Entra cada vez que finaliza un ciclo
+  69:main.c        ****         {          
+  70:main.c        ****             CiclosDureza=(uint32)(ovf1*256)+valor1-valor2; //Distancia en datos entre el flanco de 
+  71:main.c        ****             Velocidad=(uint32)33160+(6*Temperatura);//Velocidad del sonido (x100)
+  72:main.c        ****             Distancia=Velocidad*CiclosDureza/100000;//Ditancia con Frecuencia de Timer = 2* 500000H
+  73:main.c        ****             Calculos=0;//desactiva la bandera de calculos
+  74:main.c        ****             Timer_Start();//Reinicia para un proximo registro
+  75:main.c        ****             //inicializacion de las variables 
+  76:main.c        ****             ovf1=0;
+  77:main.c        ****             cont=0;
+  78:main.c        ****             valor1=0;
+  79:main.c        ****             valor2=0;            
+  80:main.c        ****         }
+  81:main.c        ****         if (ban_M11){//Bandera activada en la interrupcion del contador
+  82:main.c        ****             ban_M11=0;
+  83:main.c        ****             Count_M1++;
+  84:main.c        ****         }
+  85:main.c        ****         if(Count_M1==2)ban_M1=1;// conteos para estabilizacion
+  86:main.c        ****         if(ban_M1){
+  87:main.c        ****             Pin_Write(0);//Pin trigger en bajo
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 3
+
+
+  88:main.c        ****             PWM_Sleep(); //PWM deja de funcionar 
+  89:main.c        ****             Distancia1=Distancia;// Se designa la distancia de la medicion 1
+  90:main.c        ****             Reinit();// Funcion de reinicio de los valores 
+  91:main.c        ****         }
+  92:main.c        ****         if (ban_M22){//Bandera activada en la interrupcion del contador
+  93:main.c        ****             ban_M22=0;
+  94:main.c        ****             Count_M2++;
+  95:main.c        ****         }
+  96:main.c        ****         if(Count_M2==2){// conteos para estabilizacion
+  97:main.c        ****             ban_trig2=0;
+  98:main.c        ****             ban_M2=1;}
+  99:main.c        ****         
+ 100:main.c        ****         if(ban_M2){
+ 101:main.c        ****             Pin_Write(0);//Pin trigger en bajo
+ 102:main.c        ****             PWM_Sleep();//PWM deja de funcionar 
+ 103:main.c        ****             Boton1_isr_Enable();//se desabilita el Boton de medicion 1
+ 104:main.c        ****             Distancia2=Distancia;// Se designa la distancia de la medicion 2
+ 105:main.c        ****             if(Distancia1>Distancia2)Distancia3 = Distancia1 - Distancia2;// Medicion 1> Medion 2
+ 106:main.c        ****             else ban_trig2=1;// si no, se activa la bandera  
+ 107:main.c        ****             Reinit();// Funcion de reinicio de los valores 
+ 108:main.c        ****         }         
+ 109:main.c        ****         //Visualizacion de las altura o distancia de medicion 1
+ 110:main.c        ****         LCD_Position(0,0);
+ 111:main.c        ****         LCD_PrintString("A1:");
+ 112:main.c        ****         LCD_PrintNumber(Distancia1/10000);
+ 113:main.c        ****         LCD_PutChar('.'); //en m con 4 decimales                  
+ 114:main.c        ****         LCD_PrintNumber(Distancia1/1000%10);
+ 115:main.c        ****         LCD_PrintNumber(Distancia1/100%10);
+ 116:main.c        ****         LCD_PrintNumber(Distancia1/10%10);
+ 117:main.c        ****         LCD_PrintNumber(Distancia1%10);
+ 118:main.c        ****         LCD_PrintString("m");
+ 119:main.c        ****         //Visualizacion de las altura o distancia de medicion 2
+ 120:main.c        ****         LCD_Position(1,0);
+ 121:main.c        ****         LCD_PrintString("A2:");
+ 122:main.c        ****         LCD_PrintNumber(Distancia2/10000);
+ 123:main.c        ****         LCD_PutChar('.');  //en m con 4 decimales                 
+ 124:main.c        ****         LCD_PrintNumber(Distancia2/1000%10);
+ 125:main.c        ****         LCD_PrintNumber(Distancia2/100%10);
+ 126:main.c        ****         LCD_PrintNumber(Distancia2/10%10);
+ 127:main.c        ****         LCD_PrintNumber(Distancia2%10);
+ 128:main.c        ****         LCD_PrintString("m");       
+ 129:main.c        ****         LCD_Position(2,3);
+ 130:main.c        ****         //Visualizacion de las altura o distancia del objeto medido
+ 131:main.c        ****         LCD_PrintString("Altura objeto:");
+ 132:main.c        ****         LCD_Position(3,2);
+ 133:main.c        ****         LCD_PrintNumber(Distancia3/100);
+ 134:main.c        ****         LCD_PutChar('.');//en cm con 2 decimales                   
+ 135:main.c        ****         LCD_PrintNumber(Distancia3/10%10);
+ 136:main.c        ****         LCD_PrintNumber(Distancia3%10);
+ 137:main.c        ****         LCD_PrintString("cm");
+ 138:main.c        ****         LCD_PutChar('-');
+ 139:main.c        ****         LCD_PrintNumber(Distancia3/10000);
+ 140:main.c        ****         LCD_PutChar('.');//en m con 4 decimales               
+ 141:main.c        ****         LCD_PrintNumber(Distancia3/1000%10);
+ 142:main.c        ****         LCD_PrintNumber(Distancia3/100%10);
+ 143:main.c        ****         LCD_PrintNumber(Distancia3/10%10);
+ 144:main.c        ****         LCD_PrintNumber(Distancia3%10);
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 4
+
+
+ 145:main.c        ****         LCD_PrintString("m");
+ 146:main.c        ****         //Visualizacion de la temperatura 
+ 147:main.c        ****         LCD_Position(0,13);
+ 148:main.c        ****         LCD_PrintString("Temp:");
+ 149:main.c        ****         LCD_Position(1,13);  
+ 150:main.c        ****         LCD_PrintNumber(Temperatura/10);                  
+ 151:main.c        ****         LCD_PutChar('.');// en ºc con 1 decimal                  
+ 152:main.c        ****         LCD_PrintNumber(Temperatura%10);
+ 153:main.c        ****         LCD_PutChar(0xDF);
+ 154:main.c        ****         LCD_PutChar('C');
+ 155:main.c        ****         CyDelay(500);
+ 156:main.c        ****         LCD_ClearDisplay();       
+ 157:main.c        ****    }
+ 158:main.c        **** }
+ 159:main.c        **** CY_ISR(ISR_Timer){
+ 160:main.c        ****     
+ 161:main.c        ****     status=Timer_ReadStatusRegister();//Leer el registro de estado
+ 162:main.c        ****     if(status & Timer_STATUS_TC) //Entra aquí si la interrupción fue por TC
+ 163:main.c        ****     {
+ 164:main.c        ****         if(cont==1 )ovf1++; //Cuenta número de desbordamientos durante tiempo en alto
+ 165:main.c        ****         if(cont==2 )ovf2++; //Cuenta número de desbordamientos durante tiempo en bajo
+ 166:main.c        ****     }
+ 167:main.c        ****     if(status & Timer_STATUS_CAPTURE) //Entra aquí si la interrupción fue captura
+ 168:main.c        ****     {
+ 169:main.c        ****         if(cont==0)
+ 170:main.c        ****         {
+ 171:main.c        ****             valor1=Timer_ReadCapture(); //Obtiene primer valor
+ 172:main.c        ****             cont++;
+ 173:main.c        ****         }
+ 174:main.c        ****         else if(cont==1)
+ 175:main.c        ****         {
+ 176:main.c        ****             valor2=Timer_ReadCapture(); //Obtiene segundo valor
+ 177:main.c        ****             cont++;
+ 178:main.c        ****         }
+ 179:main.c        ****         else if(cont==2 )
+ 180:main.c        ****         {
+ 181:main.c        ****             Timer_Stop(); //Detiene el timer
+ 182:main.c        ****             valor3=Timer_ReadCapture(); //Obtiene tercer valor
+ 183:main.c        ****             Calculos=1; //Bandera que indica cálculos y visualización
+ 184:main.c        ****         }
+ 185:main.c        ****     }
+ 186:main.c        **** }
+ 187:main.c        **** 
+ 188:main.c        **** CY_ISR(Contador){
+  28              		.loc 1 188 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+ 189:main.c        ****     if(ban_trig1)ban_M11=1;//Activacion Bandera contador medicion 1
+  33              		.loc 1 189 0
+  34 0000 074B     		ldr	r3, .L4
+  35 0002 93F90030 		ldrsb	r3, [r3]
+  36 0006 13B1     		cbz	r3, .L2
+  37              		.loc 1 189 0 is_stmt 0 discriminator 1
+  38 0008 0122     		movs	r2, #1
+  39 000a 054B     		ldr	r3, .L4
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 5
+
+
+  40 000c 5A70     		strb	r2, [r3, #1]
+  41              	.L2:
+ 190:main.c        ****     if(ban_trig2)ban_M22=1;//Activacion Bandera contador medicion 2
+  42              		.loc 1 190 0 is_stmt 1
+  43 000e 044B     		ldr	r3, .L4
+  44 0010 93F90230 		ldrsb	r3, [r3, #2]
+  45 0014 13B1     		cbz	r3, .L1
+  46              		.loc 1 190 0 is_stmt 0 discriminator 1
+  47 0016 0122     		movs	r2, #1
+  48 0018 014B     		ldr	r3, .L4
+  49 001a DA70     		strb	r2, [r3, #3]
+  50              	.L1:
+  51 001c 7047     		bx	lr
+  52              	.L5:
+  53 001e 00BF     		.align	2
+  54              	.L4:
+  55 0020 00000000 		.word	.LANCHOR0
+  56              		.cfi_endproc
+  57              	.LFE65:
+  58              		.size	Contador, .-Contador
+  59              		.section	.text.ISR_Timer,"ax",%progbits
+  60              		.align	2
+  61              		.global	ISR_Timer
+  62              		.thumb
+  63              		.thumb_func
+  64              		.type	ISR_Timer, %function
+  65              	ISR_Timer:
+  66              	.LFB64:
+ 159:main.c        ****     
+  67              		.loc 1 159 0 is_stmt 1
+  68              		.cfi_startproc
+  69              		@ args = 0, pretend = 0, frame = 0
+  70              		@ frame_needed = 0, uses_anonymous_args = 0
+  71 0000 08B5     		push	{r3, lr}
+  72              		.cfi_def_cfa_offset 8
+  73              		.cfi_offset 3, -8
+  74              		.cfi_offset 14, -4
+ 161:main.c        ****     if(status & Timer_STATUS_TC) //Entra aquí si la interrupción fue por TC
+  75              		.loc 1 161 0
+  76 0002 FFF7FEFF 		bl	Timer_ReadStatusRegister
+  77              	.LVL0:
+  78 0006 1B4B     		ldr	r3, .L13
+  79 0008 1870     		strb	r0, [r3]
+ 162:main.c        ****     {
+  80              		.loc 1 162 0
+  81 000a 10F0010F 		tst	r0, #1
+  82 000e 0DD0     		beq	.L7
+ 164:main.c        ****         if(cont==2 )ovf2++; //Cuenta número de desbordamientos durante tiempo en bajo
+  83              		.loc 1 164 0
+  84 0010 194B     		ldr	r3, .L13+4
+  85 0012 1B79     		ldrb	r3, [r3, #4]	@ zero_extendqisi2
+  86 0014 012B     		cmp	r3, #1
+  87 0016 03D1     		bne	.L8
+ 164:main.c        ****         if(cont==2 )ovf2++; //Cuenta número de desbordamientos durante tiempo en bajo
+  88              		.loc 1 164 0 is_stmt 0 discriminator 1
+  89 0018 1749     		ldr	r1, .L13+4
+  90 001a 4A79     		ldrb	r2, [r1, #5]	@ zero_extendqisi2
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 6
+
+
+  91 001c 0132     		adds	r2, r2, #1
+  92 001e 4A71     		strb	r2, [r1, #5]
+  93              	.L8:
+ 165:main.c        ****     }
+  94              		.loc 1 165 0 is_stmt 1
+  95 0020 022B     		cmp	r3, #2
+  96 0022 03D1     		bne	.L7
+ 165:main.c        ****     }
+  97              		.loc 1 165 0 is_stmt 0 discriminator 1
+  98 0024 144A     		ldr	r2, .L13+4
+  99 0026 9379     		ldrb	r3, [r2, #6]	@ zero_extendqisi2
+ 100 0028 0133     		adds	r3, r3, #1
+ 101 002a 9371     		strb	r3, [r2, #6]
+ 102              	.L7:
+ 167:main.c        ****     {
+ 103              		.loc 1 167 0 is_stmt 1
+ 104 002c 10F0020F 		tst	r0, #2
+ 105 0030 1FD0     		beq	.L6
+ 169:main.c        ****         {
+ 106              		.loc 1 169 0
+ 107 0032 114B     		ldr	r3, .L13+4
+ 108 0034 1B79     		ldrb	r3, [r3, #4]	@ zero_extendqisi2
+ 109 0036 3BB9     		cbnz	r3, .L10
+ 171:main.c        ****             cont++;
+ 110              		.loc 1 171 0
+ 111 0038 FFF7FEFF 		bl	Timer_ReadCapture
+ 112              	.LVL1:
+ 113 003c 0E4B     		ldr	r3, .L13+4
+ 114 003e 9860     		str	r0, [r3, #8]
+ 172:main.c        ****         }
+ 115              		.loc 1 172 0
+ 116 0040 1A79     		ldrb	r2, [r3, #4]	@ zero_extendqisi2
+ 117 0042 0132     		adds	r2, r2, #1
+ 118 0044 1A71     		strb	r2, [r3, #4]
+ 119 0046 08BD     		pop	{r3, pc}
+ 120              	.L10:
+ 174:main.c        ****         {
+ 121              		.loc 1 174 0
+ 122 0048 012B     		cmp	r3, #1
+ 123 004a 07D1     		bne	.L11
+ 176:main.c        ****             cont++;
+ 124              		.loc 1 176 0
+ 125 004c FFF7FEFF 		bl	Timer_ReadCapture
+ 126              	.LVL2:
+ 127 0050 094B     		ldr	r3, .L13+4
+ 128 0052 D860     		str	r0, [r3, #12]
+ 177:main.c        ****         }
+ 129              		.loc 1 177 0
+ 130 0054 1A79     		ldrb	r2, [r3, #4]	@ zero_extendqisi2
+ 131 0056 0132     		adds	r2, r2, #1
+ 132 0058 1A71     		strb	r2, [r3, #4]
+ 133 005a 08BD     		pop	{r3, pc}
+ 134              	.L11:
+ 179:main.c        ****         {
+ 135              		.loc 1 179 0
+ 136 005c 022B     		cmp	r3, #2
+ 137 005e 08D1     		bne	.L6
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 7
+
+
+ 181:main.c        ****             valor3=Timer_ReadCapture(); //Obtiene tercer valor
+ 138              		.loc 1 181 0
+ 139 0060 FFF7FEFF 		bl	Timer_Stop
+ 140              	.LVL3:
+ 182:main.c        ****             Calculos=1; //Bandera que indica cálculos y visualización
+ 141              		.loc 1 182 0
+ 142 0064 FFF7FEFF 		bl	Timer_ReadCapture
+ 143              	.LVL4:
+ 144 0068 034B     		ldr	r3, .L13+4
+ 145 006a 1861     		str	r0, [r3, #16]
+ 183:main.c        ****         }
+ 146              		.loc 1 183 0
+ 147 006c 0122     		movs	r2, #1
+ 148 006e 014B     		ldr	r3, .L13
+ 149 0070 5A70     		strb	r2, [r3, #1]
+ 150              	.L6:
+ 151 0072 08BD     		pop	{r3, pc}
+ 152              	.L14:
+ 153              		.align	2
+ 154              	.L13:
+ 155 0074 00000000 		.word	.LANCHOR1
+ 156 0078 00000000 		.word	.LANCHOR0
+ 157              		.cfi_endproc
+ 158              	.LFE64:
+ 159              		.size	ISR_Timer, .-ISR_Timer
+ 160              		.section	.text.Medicion_1,"ax",%progbits
+ 161              		.align	2
+ 162              		.global	Medicion_1
+ 163              		.thumb
+ 164              		.thumb_func
+ 165              		.type	Medicion_1, %function
+ 166              	Medicion_1:
+ 167              	.LFB66:
+ 191:main.c        **** }
+ 192:main.c        **** 
+ 193:main.c        **** CY_ISR(Medicion_1){
+ 168              		.loc 1 193 0
+ 169              		.cfi_startproc
+ 170              		@ args = 0, pretend = 0, frame = 0
+ 171              		@ frame_needed = 0, uses_anonymous_args = 0
+ 172 0000 08B5     		push	{r3, lr}
+ 173              		.cfi_def_cfa_offset 8
+ 174              		.cfi_offset 3, -8
+ 175              		.cfi_offset 14, -4
+ 194:main.c        ****     Boton2_isr_Enable();//Se habilita el boton 2
+ 176              		.loc 1 194 0
+ 177 0002 FFF7FEFF 		bl	Boton2_isr_Enable
+ 178              	.LVL5:
+ 195:main.c        ****     PWM_Start();//inicializacion de PWM
+ 179              		.loc 1 195 0
+ 180 0006 FFF7FEFF 		bl	PWM_Start
+ 181              	.LVL6:
+ 196:main.c        ****     Pin_Write(1);//Pin trigger PWM en alto
+ 182              		.loc 1 196 0
+ 183 000a 0120     		movs	r0, #1
+ 184 000c FFF7FEFF 		bl	Pin_Write
+ 185              	.LVL7:
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 8
+
+
+ 197:main.c        ****     ban_trig1=1;//Activacion de contador 
+ 186              		.loc 1 197 0
+ 187 0010 024B     		ldr	r3, .L17
+ 188 0012 0122     		movs	r2, #1
+ 189 0014 1A70     		strb	r2, [r3]
+ 198:main.c        ****     Distancia1=0;//inicializacion del valor de distancia 
+ 190              		.loc 1 198 0
+ 191 0016 0022     		movs	r2, #0
+ 192 0018 5A61     		str	r2, [r3, #20]
+ 193 001a 08BD     		pop	{r3, pc}
+ 194              	.L18:
+ 195              		.align	2
+ 196              	.L17:
+ 197 001c 00000000 		.word	.LANCHOR0
+ 198              		.cfi_endproc
+ 199              	.LFE66:
+ 200              		.size	Medicion_1, .-Medicion_1
+ 201              		.section	.text.Medicion_2,"ax",%progbits
+ 202              		.align	2
+ 203              		.global	Medicion_2
+ 204              		.thumb
+ 205              		.thumb_func
+ 206              		.type	Medicion_2, %function
+ 207              	Medicion_2:
+ 208              	.LFB67:
+ 199:main.c        **** }
+ 200:main.c        **** CY_ISR(Medicion_2){
+ 209              		.loc 1 200 0
+ 210              		.cfi_startproc
+ 211              		@ args = 0, pretend = 0, frame = 0
+ 212              		@ frame_needed = 0, uses_anonymous_args = 0
+ 213 0000 08B5     		push	{r3, lr}
+ 214              		.cfi_def_cfa_offset 8
+ 215              		.cfi_offset 3, -8
+ 216              		.cfi_offset 14, -4
+ 201:main.c        ****     Boton1_isr_Disable();// se deshabilita el boton 1
+ 217              		.loc 1 201 0
+ 218 0002 FFF7FEFF 		bl	Boton1_isr_Disable
+ 219              	.LVL8:
+ 202:main.c        ****     PWM_Start();//Inicializacion de PWM
+ 220              		.loc 1 202 0
+ 221 0006 FFF7FEFF 		bl	PWM_Start
+ 222              	.LVL9:
+ 203:main.c        ****     Pin_Write(1);//Pin trigger PWM en alto
+ 223              		.loc 1 203 0
+ 224 000a 0120     		movs	r0, #1
+ 225 000c FFF7FEFF 		bl	Pin_Write
+ 226              	.LVL10:
+ 204:main.c        ****     ban_trig2=1;  //Activacion de contador   
+ 227              		.loc 1 204 0
+ 228 0010 034B     		ldr	r3, .L21
+ 229 0012 0122     		movs	r2, #1
+ 230 0014 9A70     		strb	r2, [r3, #2]
+ 205:main.c        ****     Distancia2=0;//inicializacion del valor de distancia 
+ 231              		.loc 1 205 0
+ 232 0016 0022     		movs	r2, #0
+ 233 0018 9A61     		str	r2, [r3, #24]
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 9
+
+
+ 206:main.c        ****     Distancia3=0;//inicializacion del valor de distancia 
+ 234              		.loc 1 206 0
+ 235 001a DA61     		str	r2, [r3, #28]
+ 236 001c 08BD     		pop	{r3, pc}
+ 237              	.L22:
+ 238 001e 00BF     		.align	2
+ 239              	.L21:
+ 240 0020 00000000 		.word	.LANCHOR0
+ 241              		.cfi_endproc
+ 242              	.LFE67:
+ 243              		.size	Medicion_2, .-Medicion_2
+ 244              		.section	.text.Reinit,"ax",%progbits
+ 245              		.align	2
+ 246              		.global	Reinit
+ 247              		.thumb
+ 248              		.thumb_func
+ 249              		.type	Reinit, %function
+ 250              	Reinit:
+ 251              	.LFB68:
+ 207:main.c        **** }
+ 208:main.c        **** void Reinit(){ // Se define la funcion reinicio, la cual permite llevar al estado inicial todas las
+ 252              		.loc 1 208 0
+ 253              		.cfi_startproc
+ 254              		@ args = 0, pretend = 0, frame = 0
+ 255              		@ frame_needed = 0, uses_anonymous_args = 0
+ 256 0000 08B5     		push	{r3, lr}
+ 257              		.cfi_def_cfa_offset 8
+ 258              		.cfi_offset 3, -8
+ 259              		.cfi_offset 14, -4
+ 209:main.c        ****     LCD_ClearDisplay();
+ 260              		.loc 1 209 0
+ 261 0002 0120     		movs	r0, #1
+ 262 0004 FFF7FEFF 		bl	LCD_WriteControl
+ 263              	.LVL11:
+ 210:main.c        ****     status=1;
+ 264              		.loc 1 210 0
+ 265 0008 0C49     		ldr	r1, .L25
+ 266 000a 0120     		movs	r0, #1
+ 267 000c 0870     		strb	r0, [r1]
+ 211:main.c        ****     Count_M1=0;
+ 268              		.loc 1 211 0
+ 269 000e 0C4B     		ldr	r3, .L25+4
+ 270 0010 0022     		movs	r2, #0
+ 271 0012 1A84     		strh	r2, [r3, #32]	@ movhi
+ 212:main.c        ****     Count_M2=0;
+ 272              		.loc 1 212 0
+ 273 0014 5A84     		strh	r2, [r3, #34]	@ movhi
+ 213:main.c        ****     ban_M1=0;
+ 274              		.loc 1 213 0
+ 275 0016 83F82420 		strb	r2, [r3, #36]
+ 214:main.c        ****     ban_M2=0;
+ 276              		.loc 1 214 0
+ 277 001a 83F82520 		strb	r2, [r3, #37]
+ 215:main.c        ****     ban_M11=0;
+ 278              		.loc 1 215 0
+ 279 001e 5A70     		strb	r2, [r3, #1]
+ 216:main.c        ****     ban_M22=0;
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 10
+
+
+ 280              		.loc 1 216 0
+ 281 0020 DA70     		strb	r2, [r3, #3]
+ 217:main.c        ****     Distancia=0;
+ 282              		.loc 1 217 0
+ 283 0022 9A62     		str	r2, [r3, #40]
+ 218:main.c        ****     ban_trig1=0;
+ 284              		.loc 1 218 0
+ 285 0024 1A70     		strb	r2, [r3]
+ 219:main.c        ****     ban_trig2=0;
+ 286              		.loc 1 219 0
+ 287 0026 9A70     		strb	r2, [r3, #2]
+ 220:main.c        ****     Calculos=1;
+ 288              		.loc 1 220 0
+ 289 0028 4870     		strb	r0, [r1, #1]
+ 221:main.c        ****     valor1=0;
+ 290              		.loc 1 221 0
+ 291 002a 9A60     		str	r2, [r3, #8]
+ 222:main.c        ****     valor2=0;
+ 292              		.loc 1 222 0
+ 293 002c DA60     		str	r2, [r3, #12]
+ 223:main.c        ****     valor3=0;
+ 294              		.loc 1 223 0
+ 295 002e 1A61     		str	r2, [r3, #16]
+ 224:main.c        ****     ovf1=0;
+ 296              		.loc 1 224 0
+ 297 0030 5A71     		strb	r2, [r3, #5]
+ 225:main.c        ****     ovf2=0;
+ 298              		.loc 1 225 0
+ 299 0032 9A71     		strb	r2, [r3, #6]
+ 226:main.c        ****     CiclosDureza=0;
+ 300              		.loc 1 226 0
+ 301 0034 DA62     		str	r2, [r3, #44]
+ 227:main.c        ****     cont=0;   
+ 302              		.loc 1 227 0
+ 303 0036 1A71     		strb	r2, [r3, #4]
+ 304 0038 08BD     		pop	{r3, pc}
+ 305              	.L26:
+ 306 003a 00BF     		.align	2
+ 307              	.L25:
+ 308 003c 00000000 		.word	.LANCHOR1
+ 309 0040 00000000 		.word	.LANCHOR0
+ 310              		.cfi_endproc
+ 311              	.LFE68:
+ 312              		.size	Reinit, .-Reinit
+ 313              		.section	.text.main,"ax",%progbits
+ 314              		.align	2
+ 315              		.global	main
+ 316              		.thumb
+ 317              		.thumb_func
+ 318              		.type	main, %function
+ 319              	main:
+ 320              	.LFB63:
+  44:main.c        ****     CyGlobalIntEnable; /* Enable global interrupts. */
+ 321              		.loc 1 44 0
+ 322              		.cfi_startproc
+ 323              		@ Volatile: function does not return.
+ 324              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 11
+
+
+ 325              		@ frame_needed = 0, uses_anonymous_args = 0
+ 326 0000 80B5     		push	{r7, lr}
+ 327              		.cfi_def_cfa_offset 8
+ 328              		.cfi_offset 7, -8
+ 329              		.cfi_offset 14, -4
+  45:main.c        ****        
+ 330              		.loc 1 45 0
+ 331              		.syntax unified
+ 332              	@ 45 "main.c" 1
+ 333 0002 62B6     		CPSIE   i
+ 334              	@ 0 "" 2
+  47:main.c        ****     LCD_Start();//Inicializacion LCD
+ 335              		.loc 1 47 0
+ 336              		.thumb
+ 337              		.syntax unified
+ 338 0004 FFF7FEFF 		bl	ADC_Start
+ 339              	.LVL12:
+  48:main.c        ****     Timer_Start();//Inicializacion Timer
+ 340              		.loc 1 48 0
+ 341 0008 FFF7FEFF 		bl	LCD_Start
+ 342              	.LVL13:
+  49:main.c        ****     PWM_Start();//Inicializacion PWM
+ 343              		.loc 1 49 0
+ 344 000c FFF7FEFF 		bl	Timer_Start
+ 345              	.LVL14:
+  50:main.c        ****     Counter_Start();//Inicializacion contador
+ 346              		.loc 1 50 0
+ 347 0010 FFF7FEFF 		bl	PWM_Start
+ 348              	.LVL15:
+  51:main.c        ****     Timer_isr_StartEx(ISR_Timer);//Inicializacion funcion interrupcion Timer
+ 349              		.loc 1 51 0
+ 350 0014 FFF7FEFF 		bl	Counter_Start
+ 351              	.LVL16:
+  52:main.c        ****     Contador_isr_StartEx(Contador);//Inicializacion funcion interrupcion contador
+ 352              		.loc 1 52 0
+ 353 0018 4848     		ldr	r0, .L39
+ 354 001a FFF7FEFF 		bl	Timer_isr_StartEx
+ 355              	.LVL17:
+  53:main.c        ****     Boton1_isr_StartEx(Medicion_1);//Inicializacion funcion interrupcion Boton1
+ 356              		.loc 1 53 0
+ 357 001e 4848     		ldr	r0, .L39+4
+ 358 0020 FFF7FEFF 		bl	Contador_isr_StartEx
+ 359              	.LVL18:
+  54:main.c        ****     Boton2_isr_StartEx(Medicion_2);//Inicializacion funcion interrupcion Boton2
+ 360              		.loc 1 54 0
+ 361 0024 4748     		ldr	r0, .L39+8
+ 362 0026 FFF7FEFF 		bl	Boton1_isr_StartEx
+ 363              	.LVL19:
+  55:main.c        ****     Boton2_isr_Disable();//Boton2 comienza desabilitado
+ 364              		.loc 1 55 0
+ 365 002a 4748     		ldr	r0, .L39+12
+ 366 002c FFF7FEFF 		bl	Boton2_isr_StartEx
+ 367              	.LVL20:
+  56:main.c        ****     Opamp_Start();//Inicializacion amplificador   
+ 368              		.loc 1 56 0
+ 369 0030 FFF7FEFF 		bl	Boton2_isr_Disable
+ 370              	.LVL21:
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 12
+
+
+  57:main.c        ****     
+ 371              		.loc 1 57 0
+ 372 0034 FFF7FEFF 		bl	Opamp_Start
+ 373              	.LVL22:
+ 374              	.L37:
+  64:main.c        ****         ADC_IsEndConversion(ADC_WAIT_FOR_RESULT);//finaliza conversion a datos ADC
+ 375              		.loc 1 64 0
+ 376 0038 FFF7FEFF 		bl	ADC_StartConvert
+ 377              	.LVL23:
+  65:main.c        ****         VALADC = ADC_GetResult16();// Resultado de ADC
+ 378              		.loc 1 65 0
+ 379 003c 0020     		movs	r0, #0
+ 380 003e FFF7FEFF 		bl	ADC_IsEndConversion
+ 381              	.LVL24:
+  66:main.c        ****         Temperatura=(VALADC*1024/910)-100;//Ecuacion de temperatura (x10--> 1 decimal) basado en el
+ 382              		.loc 1 66 0
+ 383 0042 FFF7FEFF 		bl	ADC_GetResult16
+ 384              	.LVL25:
+ 385 0046 80B2     		uxth	r0, r0
+ 386 0048 404A     		ldr	r2, .L39+16
+ 387 004a 1086     		strh	r0, [r2, #48]	@ movhi
+  67:main.c        ****         if(Calculos)// Entra cada vez que finaliza un ciclo
+ 388              		.loc 1 67 0
+ 389 004c 8002     		lsls	r0, r0, #10
+ 390 004e 404B     		ldr	r3, .L39+20
+ 391 0050 83FB0013 		smull	r1, r3, r3, r0
+ 392 0054 1844     		add	r0, r0, r3
+ 393 0056 4012     		asrs	r0, r0, #9
+ 394 0058 6438     		subs	r0, r0, #100
+ 395 005a 5063     		str	r0, [r2, #52]
+  68:main.c        ****         {          
+ 396              		.loc 1 68 0
+ 397 005c 3D4B     		ldr	r3, .L39+24
+ 398 005e 93F90130 		ldrsb	r3, [r3, #1]
+ 399 0062 FBB1     		cbz	r3, .L28
+  70:main.c        ****             Velocidad=(uint32)33160+(6*Temperatura);//Velocidad del sonido (x100)
+ 400              		.loc 1 70 0
+ 401 0064 1446     		mov	r4, r2
+ 402 0066 5279     		ldrb	r2, [r2, #5]	@ zero_extendqisi2
+ 403 0068 A368     		ldr	r3, [r4, #8]
+ 404 006a 03EB0223 		add	r3, r3, r2, lsl #8
+ 405 006e E268     		ldr	r2, [r4, #12]
+ 406 0070 9A1A     		subs	r2, r3, r2
+ 407 0072 E262     		str	r2, [r4, #44]
+  71:main.c        ****             Distancia=Velocidad*CiclosDureza/100000;//Ditancia con Frecuencia de Timer = 2* 500000H
+ 408              		.loc 1 71 0
+ 409 0074 00EB4000 		add	r0, r0, r0, lsl #1
+ 410 0078 4300     		lsls	r3, r0, #1
+ 411 007a 03F50143 		add	r3, r3, #33024
+ 412 007e 8833     		adds	r3, r3, #136
+ 413 0080 A363     		str	r3, [r4, #56]
+  72:main.c        ****             Calculos=0;//desactiva la bandera de calculos
+ 414              		.loc 1 72 0
+ 415 0082 03FB02F3 		mul	r3, r3, r2
+ 416 0086 5B09     		lsrs	r3, r3, #5
+ 417 0088 334A     		ldr	r2, .L39+28
+ 418 008a A2FB0323 		umull	r2, r3, r2, r3
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 13
+
+
+ 419 008e DB09     		lsrs	r3, r3, #7
+ 420 0090 A362     		str	r3, [r4, #40]
+  73:main.c        ****             Timer_Start();//Reinicia para un proximo registro
+ 421              		.loc 1 73 0
+ 422 0092 0025     		movs	r5, #0
+ 423 0094 2F4B     		ldr	r3, .L39+24
+ 424 0096 5D70     		strb	r5, [r3, #1]
+  74:main.c        ****             //inicializacion de las variables 
+ 425              		.loc 1 74 0
+ 426 0098 FFF7FEFF 		bl	Timer_Start
+ 427              	.LVL26:
+  76:main.c        ****             cont=0;
+ 428              		.loc 1 76 0
+ 429 009c 6571     		strb	r5, [r4, #5]
+  77:main.c        ****             valor1=0;
+ 430              		.loc 1 77 0
+ 431 009e 2571     		strb	r5, [r4, #4]
+  78:main.c        ****             valor2=0;            
+ 432              		.loc 1 78 0
+ 433 00a0 A560     		str	r5, [r4, #8]
+  79:main.c        ****         }
+ 434              		.loc 1 79 0
+ 435 00a2 E560     		str	r5, [r4, #12]
+ 436              	.L28:
+  81:main.c        ****             ban_M11=0;
+ 437              		.loc 1 81 0
+ 438 00a4 294B     		ldr	r3, .L39+16
+ 439 00a6 93F90130 		ldrsb	r3, [r3, #1]
+ 440 00aa 2BB1     		cbz	r3, .L29
+  82:main.c        ****             Count_M1++;
+ 441              		.loc 1 82 0
+ 442 00ac 274B     		ldr	r3, .L39+16
+ 443 00ae 0022     		movs	r2, #0
+ 444 00b0 5A70     		strb	r2, [r3, #1]
+  83:main.c        ****         }
+ 445              		.loc 1 83 0
+ 446 00b2 1A8C     		ldrh	r2, [r3, #32]
+ 447 00b4 0132     		adds	r2, r2, #1
+ 448 00b6 1A84     		strh	r2, [r3, #32]	@ movhi
+ 449              	.L29:
+  85:main.c        ****         if(ban_M1){
+ 450              		.loc 1 85 0
+ 451 00b8 244B     		ldr	r3, .L39+16
+ 452 00ba B3F92030 		ldrsh	r3, [r3, #32]
+ 453 00be 022B     		cmp	r3, #2
+ 454 00c0 03D1     		bne	.L30
+  85:main.c        ****         if(ban_M1){
+ 455              		.loc 1 85 0 is_stmt 0 discriminator 1
+ 456 00c2 0122     		movs	r2, #1
+ 457 00c4 214B     		ldr	r3, .L39+16
+ 458 00c6 83F82420 		strb	r2, [r3, #36]
+ 459              	.L30:
+  86:main.c        ****             Pin_Write(0);//Pin trigger en bajo
+ 460              		.loc 1 86 0 is_stmt 1
+ 461 00ca 204B     		ldr	r3, .L39+16
+ 462 00cc 93F92430 		ldrsb	r3, [r3, #36]
+ 463 00d0 4BB1     		cbz	r3, .L31
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 14
+
+
+  87:main.c        ****             PWM_Sleep(); //PWM deja de funcionar 
+ 464              		.loc 1 87 0
+ 465 00d2 0020     		movs	r0, #0
+ 466 00d4 FFF7FEFF 		bl	Pin_Write
+ 467              	.LVL27:
+  88:main.c        ****             Distancia1=Distancia;// Se designa la distancia de la medicion 1
+ 468              		.loc 1 88 0
+ 469 00d8 FFF7FEFF 		bl	PWM_Sleep
+ 470              	.LVL28:
+  89:main.c        ****             Reinit();// Funcion de reinicio de los valores 
+ 471              		.loc 1 89 0
+ 472 00dc 1B4B     		ldr	r3, .L39+16
+ 473 00de 9A6A     		ldr	r2, [r3, #40]
+ 474 00e0 5A61     		str	r2, [r3, #20]
+  90:main.c        ****         }
+ 475              		.loc 1 90 0
+ 476 00e2 FFF7FEFF 		bl	Reinit
+ 477              	.LVL29:
+ 478              	.L31:
+  92:main.c        ****             ban_M22=0;
+ 479              		.loc 1 92 0
+ 480 00e6 194B     		ldr	r3, .L39+16
+ 481 00e8 93F90330 		ldrsb	r3, [r3, #3]
+ 482 00ec 2BB1     		cbz	r3, .L32
+  93:main.c        ****             Count_M2++;
+ 483              		.loc 1 93 0
+ 484 00ee 174B     		ldr	r3, .L39+16
+ 485 00f0 0022     		movs	r2, #0
+ 486 00f2 DA70     		strb	r2, [r3, #3]
+  94:main.c        ****         }
+ 487              		.loc 1 94 0
+ 488 00f4 5A8C     		ldrh	r2, [r3, #34]
+ 489 00f6 0132     		adds	r2, r2, #1
+ 490 00f8 5A84     		strh	r2, [r3, #34]	@ movhi
+ 491              	.L32:
+  96:main.c        ****             ban_trig2=0;
+ 492              		.loc 1 96 0
+ 493 00fa 144B     		ldr	r3, .L39+16
+ 494 00fc B3F92230 		ldrsh	r3, [r3, #34]
+ 495 0100 022B     		cmp	r3, #2
+ 496 0102 05D1     		bne	.L33
+  97:main.c        ****             ban_M2=1;}
+ 497              		.loc 1 97 0
+ 498 0104 114B     		ldr	r3, .L39+16
+ 499 0106 0022     		movs	r2, #0
+ 500 0108 9A70     		strb	r2, [r3, #2]
+  98:main.c        ****         
+ 501              		.loc 1 98 0
+ 502 010a 0122     		movs	r2, #1
+ 503 010c 83F82520 		strb	r2, [r3, #37]
+ 504              	.L33:
+ 100:main.c        ****             Pin_Write(0);//Pin trigger en bajo
+ 505              		.loc 1 100 0
+ 506 0110 0E4B     		ldr	r3, .L39+16
+ 507 0112 93F92530 		ldrsb	r3, [r3, #37]
+ 508 0116 33B3     		cbz	r3, .L34
+ 101:main.c        ****             PWM_Sleep();//PWM deja de funcionar 
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 15
+
+
+ 509              		.loc 1 101 0
+ 510 0118 0020     		movs	r0, #0
+ 511 011a FFF7FEFF 		bl	Pin_Write
+ 512              	.LVL30:
+ 102:main.c        ****             Boton1_isr_Enable();//se desabilita el Boton de medicion 1
+ 513              		.loc 1 102 0
+ 514 011e FFF7FEFF 		bl	PWM_Sleep
+ 515              	.LVL31:
+ 103:main.c        ****             Distancia2=Distancia;// Se designa la distancia de la medicion 2
+ 516              		.loc 1 103 0
+ 517 0122 FFF7FEFF 		bl	Boton1_isr_Enable
+ 518              	.LVL32:
+ 104:main.c        ****             if(Distancia1>Distancia2)Distancia3 = Distancia1 - Distancia2;// Medicion 1> Medion 2
+ 519              		.loc 1 104 0
+ 520 0126 094B     		ldr	r3, .L39+16
+ 521 0128 9A6A     		ldr	r2, [r3, #40]
+ 522 012a 9A61     		str	r2, [r3, #24]
+ 105:main.c        ****             else ban_trig2=1;// si no, se activa la bandera  
+ 523              		.loc 1 105 0
+ 524 012c 5B69     		ldr	r3, [r3, #20]
+ 525 012e 9A42     		cmp	r2, r3
+ 526 0130 14D2     		bcs	.L35
+ 105:main.c        ****             else ban_trig2=1;// si no, se activa la bandera  
+ 527              		.loc 1 105 0 is_stmt 0 discriminator 1
+ 528 0132 9B1A     		subs	r3, r3, r2
+ 529 0134 054A     		ldr	r2, .L39+16
+ 530 0136 D361     		str	r3, [r2, #28]
+ 531 0138 13E0     		b	.L36
+ 532              	.L40:
+ 533 013a 00BF     		.align	2
+ 534              	.L39:
+ 535 013c 00000000 		.word	ISR_Timer
+ 536 0140 00000000 		.word	Contador
+ 537 0144 00000000 		.word	Medicion_1
+ 538 0148 00000000 		.word	Medicion_2
+ 539 014c 00000000 		.word	.LANCHOR0
+ 540 0150 91000990 		.word	-1878458223
+ 541 0154 00000000 		.word	.LANCHOR1
+ 542 0158 C55A7C0A 		.word	175921861
+ 543              	.L35:
+ 106:main.c        ****             Reinit();// Funcion de reinicio de los valores 
+ 544              		.loc 1 106 0 is_stmt 1
+ 545 015c 0122     		movs	r2, #1
+ 546 015e A24B     		ldr	r3, .L41
+ 547 0160 9A70     		strb	r2, [r3, #2]
+ 548              	.L36:
+ 107:main.c        ****         }         
+ 549              		.loc 1 107 0
+ 550 0162 FFF7FEFF 		bl	Reinit
+ 551              	.LVL33:
+ 552              	.L34:
+ 110:main.c        ****         LCD_PrintString("A1:");
+ 553              		.loc 1 110 0
+ 554 0166 0021     		movs	r1, #0
+ 555 0168 0846     		mov	r0, r1
+ 556 016a FFF7FEFF 		bl	LCD_Position
+ 557              	.LVL34:
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 16
+
+
+ 111:main.c        ****         LCD_PrintNumber(Distancia1/10000);
+ 558              		.loc 1 111 0
+ 559 016e 9F48     		ldr	r0, .L41+4
+ 560 0170 FFF7FEFF 		bl	LCD_PrintString
+ 561              	.LVL35:
+ 112:main.c        ****         LCD_PutChar('.'); //en m con 4 decimales                  
+ 562              		.loc 1 112 0
+ 563 0174 9C4D     		ldr	r5, .L41
+ 564 0176 6869     		ldr	r0, [r5, #20]
+ 565 0178 DFF89092 		ldr	r9, .L41+36
+ 566 017c A9FB0030 		umull	r3, r0, r9, r0
+ 567 0180 C0F34F30 		ubfx	r0, r0, #13, #16
+ 568 0184 FFF7FEFF 		bl	LCD_PrintU32Number
+ 569              	.LVL36:
+ 113:main.c        ****         LCD_PrintNumber(Distancia1/1000%10);
+ 570              		.loc 1 113 0
+ 571 0188 2E20     		movs	r0, #46
+ 572 018a FFF7FEFF 		bl	LCD_PutChar
+ 573              	.LVL37:
+ 114:main.c        ****         LCD_PrintNumber(Distancia1/100%10);
+ 574              		.loc 1 114 0
+ 575 018e 6B69     		ldr	r3, [r5, #20]
+ 576 0190 DFF87C82 		ldr	r8, .L41+40
+ 577 0194 A8FB0323 		umull	r2, r3, r8, r3
+ 578 0198 9B09     		lsrs	r3, r3, #6
+ 579 019a 954C     		ldr	r4, .L41+8
+ 580 019c A4FB0320 		umull	r2, r0, r4, r3
+ 581 01a0 C008     		lsrs	r0, r0, #3
+ 582 01a2 00EB8000 		add	r0, r0, r0, lsl #2
+ 583 01a6 4200     		lsls	r2, r0, #1
+ 584 01a8 981A     		subs	r0, r3, r2
+ 585 01aa 80B2     		uxth	r0, r0
+ 586 01ac FFF7FEFF 		bl	LCD_PrintU32Number
+ 587              	.LVL38:
+ 115:main.c        ****         LCD_PrintNumber(Distancia1/10%10);
+ 588              		.loc 1 115 0
+ 589 01b0 6B69     		ldr	r3, [r5, #20]
+ 590 01b2 904F     		ldr	r7, .L41+12
+ 591 01b4 A7FB0323 		umull	r2, r3, r7, r3
+ 592 01b8 5B09     		lsrs	r3, r3, #5
+ 593 01ba A4FB0320 		umull	r2, r0, r4, r3
+ 594 01be C008     		lsrs	r0, r0, #3
+ 595 01c0 00EB8000 		add	r0, r0, r0, lsl #2
+ 596 01c4 4200     		lsls	r2, r0, #1
+ 597 01c6 981A     		subs	r0, r3, r2
+ 598 01c8 80B2     		uxth	r0, r0
+ 599 01ca FFF7FEFF 		bl	LCD_PrintU32Number
+ 600              	.LVL39:
+ 116:main.c        ****         LCD_PrintNumber(Distancia1%10);
+ 601              		.loc 1 116 0
+ 602 01ce 6B69     		ldr	r3, [r5, #20]
+ 603 01d0 A4FB0323 		umull	r2, r3, r4, r3
+ 604 01d4 DB08     		lsrs	r3, r3, #3
+ 605 01d6 A4FB0320 		umull	r2, r0, r4, r3
+ 606 01da C008     		lsrs	r0, r0, #3
+ 607 01dc 00EB8000 		add	r0, r0, r0, lsl #2
+ 608 01e0 4200     		lsls	r2, r0, #1
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 17
+
+
+ 609 01e2 981A     		subs	r0, r3, r2
+ 610 01e4 80B2     		uxth	r0, r0
+ 611 01e6 FFF7FEFF 		bl	LCD_PrintU32Number
+ 612              	.LVL40:
+ 117:main.c        ****         LCD_PrintString("m");
+ 613              		.loc 1 117 0
+ 614 01ea 6A69     		ldr	r2, [r5, #20]
+ 615 01ec A4FB0230 		umull	r3, r0, r4, r2
+ 616 01f0 C008     		lsrs	r0, r0, #3
+ 617 01f2 00EB8000 		add	r0, r0, r0, lsl #2
+ 618 01f6 4300     		lsls	r3, r0, #1
+ 619 01f8 D01A     		subs	r0, r2, r3
+ 620 01fa 80B2     		uxth	r0, r0
+ 621 01fc FFF7FEFF 		bl	LCD_PrintU32Number
+ 622              	.LVL41:
+ 118:main.c        ****         //Visualizacion de las altura o distancia de medicion 2
+ 623              		.loc 1 118 0
+ 624 0200 7D4E     		ldr	r6, .L41+16
+ 625 0202 3046     		mov	r0, r6
+ 626 0204 FFF7FEFF 		bl	LCD_PrintString
+ 627              	.LVL42:
+ 120:main.c        ****         LCD_PrintString("A2:");
+ 628              		.loc 1 120 0
+ 629 0208 0021     		movs	r1, #0
+ 630 020a 0120     		movs	r0, #1
+ 631 020c FFF7FEFF 		bl	LCD_Position
+ 632              	.LVL43:
+ 121:main.c        ****         LCD_PrintNumber(Distancia2/10000);
+ 633              		.loc 1 121 0
+ 634 0210 7A48     		ldr	r0, .L41+20
+ 635 0212 FFF7FEFF 		bl	LCD_PrintString
+ 636              	.LVL44:
+ 122:main.c        ****         LCD_PutChar('.');  //en m con 4 decimales                 
+ 637              		.loc 1 122 0
+ 638 0216 A869     		ldr	r0, [r5, #24]
+ 639 0218 A9FB0030 		umull	r3, r0, r9, r0
+ 640 021c C0F34F30 		ubfx	r0, r0, #13, #16
+ 641 0220 FFF7FEFF 		bl	LCD_PrintU32Number
+ 642              	.LVL45:
+ 123:main.c        ****         LCD_PrintNumber(Distancia2/1000%10);
+ 643              		.loc 1 123 0
+ 644 0224 2E20     		movs	r0, #46
+ 645 0226 FFF7FEFF 		bl	LCD_PutChar
+ 646              	.LVL46:
+ 124:main.c        ****         LCD_PrintNumber(Distancia2/100%10);
+ 647              		.loc 1 124 0
+ 648 022a AB69     		ldr	r3, [r5, #24]
+ 649 022c A8FB0323 		umull	r2, r3, r8, r3
+ 650 0230 9B09     		lsrs	r3, r3, #6
+ 651 0232 A4FB0320 		umull	r2, r0, r4, r3
+ 652 0236 C008     		lsrs	r0, r0, #3
+ 653 0238 00EB8000 		add	r0, r0, r0, lsl #2
+ 654 023c 4200     		lsls	r2, r0, #1
+ 655 023e 981A     		subs	r0, r3, r2
+ 656 0240 80B2     		uxth	r0, r0
+ 657 0242 FFF7FEFF 		bl	LCD_PrintU32Number
+ 658              	.LVL47:
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 18
+
+
+ 125:main.c        ****         LCD_PrintNumber(Distancia2/10%10);
+ 659              		.loc 1 125 0
+ 660 0246 AB69     		ldr	r3, [r5, #24]
+ 661 0248 A7FB0323 		umull	r2, r3, r7, r3
+ 662 024c 5B09     		lsrs	r3, r3, #5
+ 663 024e A4FB0320 		umull	r2, r0, r4, r3
+ 664 0252 C008     		lsrs	r0, r0, #3
+ 665 0254 00EB8000 		add	r0, r0, r0, lsl #2
+ 666 0258 4200     		lsls	r2, r0, #1
+ 667 025a 981A     		subs	r0, r3, r2
+ 668 025c 80B2     		uxth	r0, r0
+ 669 025e FFF7FEFF 		bl	LCD_PrintU32Number
+ 670              	.LVL48:
+ 126:main.c        ****         LCD_PrintNumber(Distancia2%10);
+ 671              		.loc 1 126 0
+ 672 0262 AB69     		ldr	r3, [r5, #24]
+ 673 0264 A4FB0323 		umull	r2, r3, r4, r3
+ 674 0268 DB08     		lsrs	r3, r3, #3
+ 675 026a A4FB0320 		umull	r2, r0, r4, r3
+ 676 026e C008     		lsrs	r0, r0, #3
+ 677 0270 00EB8000 		add	r0, r0, r0, lsl #2
+ 678 0274 4200     		lsls	r2, r0, #1
+ 679 0276 981A     		subs	r0, r3, r2
+ 680 0278 80B2     		uxth	r0, r0
+ 681 027a FFF7FEFF 		bl	LCD_PrintU32Number
+ 682              	.LVL49:
+ 127:main.c        ****         LCD_PrintString("m");       
+ 683              		.loc 1 127 0
+ 684 027e AA69     		ldr	r2, [r5, #24]
+ 685 0280 A4FB0230 		umull	r3, r0, r4, r2
+ 686 0284 C008     		lsrs	r0, r0, #3
+ 687 0286 00EB8000 		add	r0, r0, r0, lsl #2
+ 688 028a 4300     		lsls	r3, r0, #1
+ 689 028c D01A     		subs	r0, r2, r3
+ 690 028e 80B2     		uxth	r0, r0
+ 691 0290 FFF7FEFF 		bl	LCD_PrintU32Number
+ 692              	.LVL50:
+ 128:main.c        ****         LCD_Position(2,3);
+ 693              		.loc 1 128 0
+ 694 0294 3046     		mov	r0, r6
+ 695 0296 FFF7FEFF 		bl	LCD_PrintString
+ 696              	.LVL51:
+ 129:main.c        ****         //Visualizacion de las altura o distancia del objeto medido
+ 697              		.loc 1 129 0
+ 698 029a 0321     		movs	r1, #3
+ 699 029c 0220     		movs	r0, #2
+ 700 029e FFF7FEFF 		bl	LCD_Position
+ 701              	.LVL52:
+ 131:main.c        ****         LCD_Position(3,2);
+ 702              		.loc 1 131 0
+ 703 02a2 5748     		ldr	r0, .L41+24
+ 704 02a4 FFF7FEFF 		bl	LCD_PrintString
+ 705              	.LVL53:
+ 132:main.c        ****         LCD_PrintNumber(Distancia3/100);
+ 706              		.loc 1 132 0
+ 707 02a8 0221     		movs	r1, #2
+ 708 02aa 0320     		movs	r0, #3
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 19
+
+
+ 709 02ac FFF7FEFF 		bl	LCD_Position
+ 710              	.LVL54:
+ 133:main.c        ****         LCD_PutChar('.');//en cm con 2 decimales                   
+ 711              		.loc 1 133 0
+ 712 02b0 E869     		ldr	r0, [r5, #28]
+ 713 02b2 A7FB0030 		umull	r3, r0, r7, r0
+ 714 02b6 C0F34F10 		ubfx	r0, r0, #5, #16
+ 715 02ba FFF7FEFF 		bl	LCD_PrintU32Number
+ 716              	.LVL55:
+ 134:main.c        ****         LCD_PrintNumber(Distancia3/10%10);
+ 717              		.loc 1 134 0
+ 718 02be 2E20     		movs	r0, #46
+ 719 02c0 FFF7FEFF 		bl	LCD_PutChar
+ 720              	.LVL56:
+ 135:main.c        ****         LCD_PrintNumber(Distancia3%10);
+ 721              		.loc 1 135 0
+ 722 02c4 EB69     		ldr	r3, [r5, #28]
+ 723 02c6 A4FB0323 		umull	r2, r3, r4, r3
+ 724 02ca DB08     		lsrs	r3, r3, #3
+ 725 02cc A4FB0320 		umull	r2, r0, r4, r3
+ 726 02d0 C008     		lsrs	r0, r0, #3
+ 727 02d2 00EB8000 		add	r0, r0, r0, lsl #2
+ 728 02d6 4200     		lsls	r2, r0, #1
+ 729 02d8 981A     		subs	r0, r3, r2
+ 730 02da 80B2     		uxth	r0, r0
+ 731 02dc FFF7FEFF 		bl	LCD_PrintU32Number
+ 732              	.LVL57:
+ 136:main.c        ****         LCD_PrintString("cm");
+ 733              		.loc 1 136 0
+ 734 02e0 EA69     		ldr	r2, [r5, #28]
+ 735 02e2 A4FB0230 		umull	r3, r0, r4, r2
+ 736 02e6 C008     		lsrs	r0, r0, #3
+ 737 02e8 00EB8000 		add	r0, r0, r0, lsl #2
+ 738 02ec 4300     		lsls	r3, r0, #1
+ 739 02ee D01A     		subs	r0, r2, r3
+ 740 02f0 80B2     		uxth	r0, r0
+ 741 02f2 FFF7FEFF 		bl	LCD_PrintU32Number
+ 742              	.LVL58:
+ 137:main.c        ****         LCD_PutChar('-');
+ 743              		.loc 1 137 0
+ 744 02f6 4348     		ldr	r0, .L41+28
+ 745 02f8 FFF7FEFF 		bl	LCD_PrintString
+ 746              	.LVL59:
+ 138:main.c        ****         LCD_PrintNumber(Distancia3/10000);
+ 747              		.loc 1 138 0
+ 748 02fc 2D20     		movs	r0, #45
+ 749 02fe FFF7FEFF 		bl	LCD_PutChar
+ 750              	.LVL60:
+ 139:main.c        ****         LCD_PutChar('.');//en m con 4 decimales               
+ 751              		.loc 1 139 0
+ 752 0302 E869     		ldr	r0, [r5, #28]
+ 753 0304 A9FB0030 		umull	r3, r0, r9, r0
+ 754 0308 C0F34F30 		ubfx	r0, r0, #13, #16
+ 755 030c FFF7FEFF 		bl	LCD_PrintU32Number
+ 756              	.LVL61:
+ 140:main.c        ****         LCD_PrintNumber(Distancia3/1000%10);
+ 757              		.loc 1 140 0
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 20
+
+
+ 758 0310 2E20     		movs	r0, #46
+ 759 0312 FFF7FEFF 		bl	LCD_PutChar
+ 760              	.LVL62:
+ 141:main.c        ****         LCD_PrintNumber(Distancia3/100%10);
+ 761              		.loc 1 141 0
+ 762 0316 EB69     		ldr	r3, [r5, #28]
+ 763 0318 A8FB0338 		umull	r3, r8, r8, r3
+ 764 031c 4FEA9818 		lsr	r8, r8, #6
+ 765 0320 A4FB0830 		umull	r3, r0, r4, r8
+ 766 0324 C008     		lsrs	r0, r0, #3
+ 767 0326 00EB8000 		add	r0, r0, r0, lsl #2
+ 768 032a 4300     		lsls	r3, r0, #1
+ 769 032c C3EB0800 		rsb	r0, r3, r8
+ 770 0330 80B2     		uxth	r0, r0
+ 771 0332 FFF7FEFF 		bl	LCD_PrintU32Number
+ 772              	.LVL63:
+ 142:main.c        ****         LCD_PrintNumber(Distancia3/10%10);
+ 773              		.loc 1 142 0
+ 774 0336 EB69     		ldr	r3, [r5, #28]
+ 775 0338 A7FB0337 		umull	r3, r7, r7, r3
+ 776 033c 7F09     		lsrs	r7, r7, #5
+ 777 033e A4FB0730 		umull	r3, r0, r4, r7
+ 778 0342 C008     		lsrs	r0, r0, #3
+ 779 0344 00EB8000 		add	r0, r0, r0, lsl #2
+ 780 0348 4300     		lsls	r3, r0, #1
+ 781 034a F81A     		subs	r0, r7, r3
+ 782 034c 80B2     		uxth	r0, r0
+ 783 034e FFF7FEFF 		bl	LCD_PrintU32Number
+ 784              	.LVL64:
+ 143:main.c        ****         LCD_PrintNumber(Distancia3%10);
+ 785              		.loc 1 143 0
+ 786 0352 EB69     		ldr	r3, [r5, #28]
+ 787 0354 A4FB0323 		umull	r2, r3, r4, r3
+ 788 0358 DB08     		lsrs	r3, r3, #3
+ 789 035a A4FB0320 		umull	r2, r0, r4, r3
+ 790 035e C008     		lsrs	r0, r0, #3
+ 791 0360 00EB8000 		add	r0, r0, r0, lsl #2
+ 792 0364 4200     		lsls	r2, r0, #1
+ 793 0366 981A     		subs	r0, r3, r2
+ 794 0368 80B2     		uxth	r0, r0
+ 795 036a FFF7FEFF 		bl	LCD_PrintU32Number
+ 796              	.LVL65:
+ 144:main.c        ****         LCD_PrintString("m");
+ 797              		.loc 1 144 0
+ 798 036e EA69     		ldr	r2, [r5, #28]
+ 799 0370 A4FB0230 		umull	r3, r0, r4, r2
+ 800 0374 C008     		lsrs	r0, r0, #3
+ 801 0376 00EB8000 		add	r0, r0, r0, lsl #2
+ 802 037a 4300     		lsls	r3, r0, #1
+ 803 037c D01A     		subs	r0, r2, r3
+ 804 037e 80B2     		uxth	r0, r0
+ 805 0380 FFF7FEFF 		bl	LCD_PrintU32Number
+ 806              	.LVL66:
+ 145:main.c        ****         //Visualizacion de la temperatura 
+ 807              		.loc 1 145 0
+ 808 0384 3046     		mov	r0, r6
+ 809 0386 FFF7FEFF 		bl	LCD_PrintString
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 21
+
+
+ 810              	.LVL67:
+ 147:main.c        ****         LCD_PrintString("Temp:");
+ 811              		.loc 1 147 0
+ 812 038a 0D21     		movs	r1, #13
+ 813 038c 0020     		movs	r0, #0
+ 814 038e FFF7FEFF 		bl	LCD_Position
+ 815              	.LVL68:
+ 148:main.c        ****         LCD_Position(1,13);  
+ 816              		.loc 1 148 0
+ 817 0392 1D48     		ldr	r0, .L41+32
+ 818 0394 FFF7FEFF 		bl	LCD_PrintString
+ 819              	.LVL69:
+ 149:main.c        ****         LCD_PrintNumber(Temperatura/10);                  
+ 820              		.loc 1 149 0
+ 821 0398 0D21     		movs	r1, #13
+ 822 039a 0120     		movs	r0, #1
+ 823 039c FFF7FEFF 		bl	LCD_Position
+ 824              	.LVL70:
+ 150:main.c        ****         LCD_PutChar('.');// en ºc con 1 decimal                  
+ 825              		.loc 1 150 0
+ 826 03a0 686B     		ldr	r0, [r5, #52]
+ 827 03a2 A4FB0030 		umull	r3, r0, r4, r0
+ 828 03a6 C0F3CF00 		ubfx	r0, r0, #3, #16
+ 829 03aa FFF7FEFF 		bl	LCD_PrintU32Number
+ 830              	.LVL71:
+ 151:main.c        ****         LCD_PrintNumber(Temperatura%10);
+ 831              		.loc 1 151 0
+ 832 03ae 2E20     		movs	r0, #46
+ 833 03b0 FFF7FEFF 		bl	LCD_PutChar
+ 834              	.LVL72:
+ 152:main.c        ****         LCD_PutChar(0xDF);
+ 835              		.loc 1 152 0
+ 836 03b4 6B6B     		ldr	r3, [r5, #52]
+ 837 03b6 A4FB0320 		umull	r2, r0, r4, r3
+ 838 03ba C008     		lsrs	r0, r0, #3
+ 839 03bc 00EB8000 		add	r0, r0, r0, lsl #2
+ 840 03c0 4400     		lsls	r4, r0, #1
+ 841 03c2 181B     		subs	r0, r3, r4
+ 842 03c4 80B2     		uxth	r0, r0
+ 843 03c6 FFF7FEFF 		bl	LCD_PrintU32Number
+ 844              	.LVL73:
+ 153:main.c        ****         LCD_PutChar('C');
+ 845              		.loc 1 153 0
+ 846 03ca DF20     		movs	r0, #223
+ 847 03cc FFF7FEFF 		bl	LCD_PutChar
+ 848              	.LVL74:
+ 154:main.c        ****         CyDelay(500);
+ 849              		.loc 1 154 0
+ 850 03d0 4320     		movs	r0, #67
+ 851 03d2 FFF7FEFF 		bl	LCD_PutChar
+ 852              	.LVL75:
+ 155:main.c        ****         LCD_ClearDisplay();       
+ 853              		.loc 1 155 0
+ 854 03d6 4FF4FA70 		mov	r0, #500
+ 855 03da FFF7FEFF 		bl	CyDelay
+ 856              	.LVL76:
+ 156:main.c        ****    }
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 22
+
+
+ 857              		.loc 1 156 0
+ 858 03de 0120     		movs	r0, #1
+ 859 03e0 FFF7FEFF 		bl	LCD_WriteControl
+ 860              	.LVL77:
+ 157:main.c        **** }
+ 861              		.loc 1 157 0
+ 862 03e4 28E6     		b	.L37
+ 863              	.L42:
+ 864 03e6 00BF     		.align	2
+ 865              	.L41:
+ 866 03e8 00000000 		.word	.LANCHOR0
+ 867 03ec 00000000 		.word	.LC0
+ 868 03f0 CDCCCCCC 		.word	-858993459
+ 869 03f4 1F85EB51 		.word	1374389535
+ 870 03f8 04000000 		.word	.LC1
+ 871 03fc 08000000 		.word	.LC2
+ 872 0400 0C000000 		.word	.LC3
+ 873 0404 1C000000 		.word	.LC4
+ 874 0408 20000000 		.word	.LC5
+ 875 040c 5917B7D1 		.word	-776530087
+ 876 0410 D34D6210 		.word	274877907
+ 877              		.cfi_endproc
+ 878              	.LFE63:
+ 879              		.size	main, .-main
+ 880              		.global	cont
+ 881              		.global	CiclosDureza
+ 882              		.global	ovf2
+ 883              		.global	ovf1
+ 884              		.global	valor3
+ 885              		.global	valor2
+ 886              		.global	valor1
+ 887              		.global	Calculos
+ 888              		.global	Distancia3
+ 889              		.global	Distancia2
+ 890              		.global	Distancia1
+ 891              		.global	Distancia
+ 892              		.global	Velocidad
+ 893              		.global	ban_trig2
+ 894              		.global	ban_trig1
+ 895              		.global	ban_M22
+ 896              		.global	ban_M11
+ 897              		.global	ban_M2
+ 898              		.global	ban_M1
+ 899              		.global	Count_M2
+ 900              		.global	Count_M1
+ 901              		.global	status
+ 902              		.global	Temperatura
+ 903              		.global	VALADC
+ 904              		.data
+ 905              		.set	.LANCHOR1,. + 0
+ 906              		.type	status, %object
+ 907              		.size	status, 1
+ 908              	status:
+ 909 0000 01       		.byte	1
+ 910              		.type	Calculos, %object
+ 911              		.size	Calculos, 1
+ 912              	Calculos:
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 23
+
+
+ 913 0001 01       		.byte	1
+ 914              		.section	.rodata.str1.4,"aMS",%progbits,1
+ 915              		.align	2
+ 916              	.LC0:
+ 917 0000 41313A00 		.ascii	"A1:\000"
+ 918              	.LC1:
+ 919 0004 6D00     		.ascii	"m\000"
+ 920 0006 0000     		.space	2
+ 921              	.LC2:
+ 922 0008 41323A00 		.ascii	"A2:\000"
+ 923              	.LC3:
+ 924 000c 416C7475 		.ascii	"Altura objeto:\000"
+ 924      7261206F 
+ 924      626A6574 
+ 924      6F3A00
+ 925 001b 00       		.space	1
+ 926              	.LC4:
+ 927 001c 636D00   		.ascii	"cm\000"
+ 928 001f 00       		.space	1
+ 929              	.LC5:
+ 930 0020 54656D70 		.ascii	"Temp:\000"
+ 930      3A00
+ 931              		.bss
+ 932              		.align	2
+ 933              		.set	.LANCHOR0,. + 0
+ 934              		.type	ban_trig1, %object
+ 935              		.size	ban_trig1, 1
+ 936              	ban_trig1:
+ 937 0000 00       		.space	1
+ 938              		.type	ban_M11, %object
+ 939              		.size	ban_M11, 1
+ 940              	ban_M11:
+ 941 0001 00       		.space	1
+ 942              		.type	ban_trig2, %object
+ 943              		.size	ban_trig2, 1
+ 944              	ban_trig2:
+ 945 0002 00       		.space	1
+ 946              		.type	ban_M22, %object
+ 947              		.size	ban_M22, 1
+ 948              	ban_M22:
+ 949 0003 00       		.space	1
+ 950              		.type	cont, %object
+ 951              		.size	cont, 1
+ 952              	cont:
+ 953 0004 00       		.space	1
+ 954              		.type	ovf1, %object
+ 955              		.size	ovf1, 1
+ 956              	ovf1:
+ 957 0005 00       		.space	1
+ 958              		.type	ovf2, %object
+ 959              		.size	ovf2, 1
+ 960              	ovf2:
+ 961 0006 00       		.space	1
+ 962 0007 00       		.space	1
+ 963              		.type	valor1, %object
+ 964              		.size	valor1, 4
+ 965              	valor1:
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 24
+
+
+ 966 0008 00000000 		.space	4
+ 967              		.type	valor2, %object
+ 968              		.size	valor2, 4
+ 969              	valor2:
+ 970 000c 00000000 		.space	4
+ 971              		.type	valor3, %object
+ 972              		.size	valor3, 4
+ 973              	valor3:
+ 974 0010 00000000 		.space	4
+ 975              		.type	Distancia1, %object
+ 976              		.size	Distancia1, 4
+ 977              	Distancia1:
+ 978 0014 00000000 		.space	4
+ 979              		.type	Distancia2, %object
+ 980              		.size	Distancia2, 4
+ 981              	Distancia2:
+ 982 0018 00000000 		.space	4
+ 983              		.type	Distancia3, %object
+ 984              		.size	Distancia3, 4
+ 985              	Distancia3:
+ 986 001c 00000000 		.space	4
+ 987              		.type	Count_M1, %object
+ 988              		.size	Count_M1, 2
+ 989              	Count_M1:
+ 990 0020 0000     		.space	2
+ 991              		.type	Count_M2, %object
+ 992              		.size	Count_M2, 2
+ 993              	Count_M2:
+ 994 0022 0000     		.space	2
+ 995              		.type	ban_M1, %object
+ 996              		.size	ban_M1, 1
+ 997              	ban_M1:
+ 998 0024 00       		.space	1
+ 999              		.type	ban_M2, %object
+ 1000              		.size	ban_M2, 1
+ 1001              	ban_M2:
+ 1002 0025 00       		.space	1
+ 1003 0026 0000     		.space	2
+ 1004              		.type	Distancia, %object
+ 1005              		.size	Distancia, 4
+ 1006              	Distancia:
+ 1007 0028 00000000 		.space	4
+ 1008              		.type	CiclosDureza, %object
+ 1009              		.size	CiclosDureza, 4
+ 1010              	CiclosDureza:
+ 1011 002c 00000000 		.space	4
+ 1012              		.type	VALADC, %object
+ 1013              		.size	VALADC, 2
+ 1014              	VALADC:
+ 1015 0030 0000     		.space	2
+ 1016 0032 0000     		.space	2
+ 1017              		.type	Temperatura, %object
+ 1018              		.size	Temperatura, 4
+ 1019              	Temperatura:
+ 1020 0034 00000000 		.space	4
+ 1021              		.type	Velocidad, %object
+ 1022              		.size	Velocidad, 4
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 25
+
+
+ 1023              	Velocidad:
+ 1024 0038 00000000 		.space	4
+ 1025              		.text
+ 1026              	.Letext0:
+ 1027              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 1028              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 1029              		.file 4 "Generated_Source\\PSoC5/cytypes.h"
+ 1030              		.file 5 "Generated_Source\\PSoC5/core_cm3.h"
+ 1031              		.file 6 "Generated_Source\\PSoC5/Timer.h"
+ 1032              		.file 7 "Generated_Source\\PSoC5/Boton2_isr.h"
+ 1033              		.file 8 "Generated_Source\\PSoC5/PWM.h"
+ 1034              		.file 9 "Generated_Source\\PSoC5/Pin.h"
+ 1035              		.file 10 "Generated_Source\\PSoC5/Boton1_isr.h"
+ 1036              		.file 11 "Generated_Source\\PSoC5/LCD.h"
+ 1037              		.file 12 "Generated_Source\\PSoC5/ADC.h"
+ 1038              		.file 13 "Generated_Source\\PSoC5/Counter.h"
+ 1039              		.file 14 "Generated_Source\\PSoC5/Timer_isr.h"
+ 1040              		.file 15 "Generated_Source\\PSoC5/Contador_isr.h"
+ 1041              		.file 16 "Generated_Source\\PSoC5/Opamp.h"
+ 1042              		.file 17 "Generated_Source\\PSoC5/CyLib.h"
+ 1043              		.section	.debug_info,"",%progbits
+ 1044              	.Ldebug_info0:
+ 1045 0000 E2080000 		.4byte	0x8e2
+ 1046 0004 0400     		.2byte	0x4
+ 1047 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 1048 000a 04       		.byte	0x4
+ 1049 000b 01       		.uleb128 0x1
+ 1050 000c 60020000 		.4byte	.LASF78
+ 1051 0010 0C       		.byte	0xc
+ 1052 0011 70030000 		.4byte	.LASF79
+ 1053 0015 28030000 		.4byte	.LASF80
+ 1054 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 1055 001d 00000000 		.4byte	0
+ 1056 0021 00000000 		.4byte	.Ldebug_line0
+ 1057 0025 02       		.uleb128 0x2
+ 1058 0026 08       		.byte	0x8
+ 1059 0027 07       		.byte	0x7
+ 1060 0028 FA000000 		.4byte	.LASF0
+ 1061 002c 02       		.uleb128 0x2
+ 1062 002d 04       		.byte	0x4
+ 1063 002e 07       		.byte	0x7
+ 1064 002f FA010000 		.4byte	.LASF1
+ 1065 0033 02       		.uleb128 0x2
+ 1066 0034 01       		.byte	0x1
+ 1067 0035 06       		.byte	0x6
+ 1068 0036 DB010000 		.4byte	.LASF2
+ 1069 003a 02       		.uleb128 0x2
+ 1070 003b 01       		.byte	0x1
+ 1071 003c 08       		.byte	0x8
+ 1072 003d 88010000 		.4byte	.LASF3
+ 1073 0041 02       		.uleb128 0x2
+ 1074 0042 02       		.byte	0x2
+ 1075 0043 05       		.byte	0x5
+ 1076 0044 42000000 		.4byte	.LASF4
+ 1077 0048 02       		.uleb128 0x2
+ 1078 0049 02       		.byte	0x2
+ 1079 004a 07       		.byte	0x7
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 26
+
+
+ 1080 004b 46020000 		.4byte	.LASF5
+ 1081 004f 03       		.uleb128 0x3
+ 1082 0050 D2030000 		.4byte	.LASF9
+ 1083 0054 02       		.byte	0x2
+ 1084 0055 3F       		.byte	0x3f
+ 1085 0056 5A000000 		.4byte	0x5a
+ 1086 005a 02       		.uleb128 0x2
+ 1087 005b 04       		.byte	0x4
+ 1088 005c 05       		.byte	0x5
+ 1089 005d 33010000 		.4byte	.LASF6
+ 1090 0061 02       		.uleb128 0x2
+ 1091 0062 04       		.byte	0x4
+ 1092 0063 07       		.byte	0x7
+ 1093 0064 77030000 		.4byte	.LASF7
+ 1094 0068 02       		.uleb128 0x2
+ 1095 0069 08       		.byte	0x8
+ 1096 006a 05       		.byte	0x5
+ 1097 006b EC000000 		.4byte	.LASF8
+ 1098 006f 04       		.uleb128 0x4
+ 1099 0070 04       		.byte	0x4
+ 1100 0071 05       		.byte	0x5
+ 1101 0072 696E7400 		.ascii	"int\000"
+ 1102 0076 03       		.uleb128 0x3
+ 1103 0077 0D030000 		.4byte	.LASF10
+ 1104 007b 03       		.byte	0x3
+ 1105 007c 2C       		.byte	0x2c
+ 1106 007d 4F000000 		.4byte	0x4f
+ 1107 0081 05       		.uleb128 0x5
+ 1108 0082 92000000 		.4byte	.LASF11
+ 1109 0086 04       		.byte	0x4
+ 1110 0087 E801     		.2byte	0x1e8
+ 1111 0089 3A000000 		.4byte	0x3a
+ 1112 008d 05       		.uleb128 0x5
+ 1113 008e 7B000000 		.4byte	.LASF12
+ 1114 0092 04       		.byte	0x4
+ 1115 0093 E901     		.2byte	0x1e9
+ 1116 0095 48000000 		.4byte	0x48
+ 1117 0099 05       		.uleb128 0x5
+ 1118 009a 69030000 		.4byte	.LASF13
+ 1119 009e 04       		.byte	0x4
+ 1120 009f EA01     		.2byte	0x1ea
+ 1121 00a1 61000000 		.4byte	0x61
+ 1122 00a5 05       		.uleb128 0x5
+ 1123 00a6 11010000 		.4byte	.LASF14
+ 1124 00aa 04       		.byte	0x4
+ 1125 00ab EB01     		.2byte	0x1eb
+ 1126 00ad 33000000 		.4byte	0x33
+ 1127 00b1 05       		.uleb128 0x5
+ 1128 00b2 8C000000 		.4byte	.LASF15
+ 1129 00b6 04       		.byte	0x4
+ 1130 00b7 EC01     		.2byte	0x1ec
+ 1131 00b9 41000000 		.4byte	0x41
+ 1132 00bd 02       		.uleb128 0x2
+ 1133 00be 04       		.byte	0x4
+ 1134 00bf 04       		.byte	0x4
+ 1135 00c0 E6000000 		.4byte	.LASF16
+ 1136 00c4 02       		.uleb128 0x2
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 27
+
+
+ 1137 00c5 08       		.byte	0x8
+ 1138 00c6 04       		.byte	0x4
+ 1139 00c7 89030000 		.4byte	.LASF17
+ 1140 00cb 02       		.uleb128 0x2
+ 1141 00cc 01       		.byte	0x1
+ 1142 00cd 08       		.byte	0x8
+ 1143 00ce 01030000 		.4byte	.LASF18
+ 1144 00d2 02       		.uleb128 0x2
+ 1145 00d3 08       		.byte	0x8
+ 1146 00d4 04       		.byte	0x4
+ 1147 00d5 7C010000 		.4byte	.LASF19
+ 1148 00d9 02       		.uleb128 0x2
+ 1149 00da 04       		.byte	0x4
+ 1150 00db 07       		.byte	0x7
+ 1151 00dc 02040000 		.4byte	.LASF20
+ 1152 00e0 06       		.uleb128 0x6
+ 1153 00e1 67040000 		.4byte	.LASF81
+ 1154 00e5 01       		.byte	0x1
+ 1155 00e6 BC       		.byte	0xbc
+ 1156 00e7 00000000 		.4byte	.LFB65
+ 1157 00eb 24000000 		.4byte	.LFE65-.LFB65
+ 1158 00ef 01       		.uleb128 0x1
+ 1159 00f0 9C       		.byte	0x9c
+ 1160 00f1 07       		.uleb128 0x7
+ 1161 00f2 2A020000 		.4byte	.LASF21
+ 1162 00f6 01       		.byte	0x1
+ 1163 00f7 9F       		.byte	0x9f
+ 1164 00f8 00000000 		.4byte	.LFB64
+ 1165 00fc 7C000000 		.4byte	.LFE64-.LFB64
+ 1166 0100 01       		.uleb128 0x1
+ 1167 0101 9C       		.byte	0x9c
+ 1168 0102 34010000 		.4byte	0x134
+ 1169 0106 08       		.uleb128 0x8
+ 1170 0107 06000000 		.4byte	.LVL0
+ 1171 010b B1070000 		.4byte	0x7b1
+ 1172 010f 08       		.uleb128 0x8
+ 1173 0110 3C000000 		.4byte	.LVL1
+ 1174 0114 BC070000 		.4byte	0x7bc
+ 1175 0118 08       		.uleb128 0x8
+ 1176 0119 50000000 		.4byte	.LVL2
+ 1177 011d BC070000 		.4byte	0x7bc
+ 1178 0121 08       		.uleb128 0x8
+ 1179 0122 64000000 		.4byte	.LVL3
+ 1180 0126 C7070000 		.4byte	0x7c7
+ 1181 012a 08       		.uleb128 0x8
+ 1182 012b 68000000 		.4byte	.LVL4
+ 1183 012f BC070000 		.4byte	0x7bc
+ 1184 0133 00       		.byte	0
+ 1185 0134 07       		.uleb128 0x7
+ 1186 0135 1E010000 		.4byte	.LASF22
+ 1187 0139 01       		.byte	0x1
+ 1188 013a C1       		.byte	0xc1
+ 1189 013b 00000000 		.4byte	.LFB66
+ 1190 013f 20000000 		.4byte	.LFE66-.LFB66
+ 1191 0143 01       		.uleb128 0x1
+ 1192 0144 9C       		.byte	0x9c
+ 1193 0145 6B010000 		.4byte	0x16b
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 28
+
+
+ 1194 0149 08       		.uleb128 0x8
+ 1195 014a 06000000 		.4byte	.LVL5
+ 1196 014e D2070000 		.4byte	0x7d2
+ 1197 0152 08       		.uleb128 0x8
+ 1198 0153 0A000000 		.4byte	.LVL6
+ 1199 0157 DD070000 		.4byte	0x7dd
+ 1200 015b 09       		.uleb128 0x9
+ 1201 015c 10000000 		.4byte	.LVL7
+ 1202 0160 E8070000 		.4byte	0x7e8
+ 1203 0164 0A       		.uleb128 0xa
+ 1204 0165 01       		.uleb128 0x1
+ 1205 0166 50       		.byte	0x50
+ 1206 0167 01       		.uleb128 0x1
+ 1207 0168 31       		.byte	0x31
+ 1208 0169 00       		.byte	0
+ 1209 016a 00       		.byte	0
+ 1210 016b 07       		.uleb128 0x7
+ 1211 016c 61000000 		.4byte	.LASF23
+ 1212 0170 01       		.byte	0x1
+ 1213 0171 C8       		.byte	0xc8
+ 1214 0172 00000000 		.4byte	.LFB67
+ 1215 0176 24000000 		.4byte	.LFE67-.LFB67
+ 1216 017a 01       		.uleb128 0x1
+ 1217 017b 9C       		.byte	0x9c
+ 1218 017c A2010000 		.4byte	0x1a2
+ 1219 0180 08       		.uleb128 0x8
+ 1220 0181 06000000 		.4byte	.LVL8
+ 1221 0185 F3070000 		.4byte	0x7f3
+ 1222 0189 08       		.uleb128 0x8
+ 1223 018a 0A000000 		.4byte	.LVL9
+ 1224 018e DD070000 		.4byte	0x7dd
+ 1225 0192 09       		.uleb128 0x9
+ 1226 0193 10000000 		.4byte	.LVL10
+ 1227 0197 E8070000 		.4byte	0x7e8
+ 1228 019b 0A       		.uleb128 0xa
+ 1229 019c 01       		.uleb128 0x1
+ 1230 019d 50       		.byte	0x50
+ 1231 019e 01       		.uleb128 0x1
+ 1232 019f 31       		.byte	0x31
+ 1233 01a0 00       		.byte	0
+ 1234 01a1 00       		.byte	0
+ 1235 01a2 07       		.uleb128 0x7
+ 1236 01a3 06030000 		.4byte	.LASF24
+ 1237 01a7 01       		.byte	0x1
+ 1238 01a8 D0       		.byte	0xd0
+ 1239 01a9 00000000 		.4byte	.LFB68
+ 1240 01ad 44000000 		.4byte	.LFE68-.LFB68
+ 1241 01b1 01       		.uleb128 0x1
+ 1242 01b2 9C       		.byte	0x9c
+ 1243 01b3 C7010000 		.4byte	0x1c7
+ 1244 01b7 09       		.uleb128 0x9
+ 1245 01b8 08000000 		.4byte	.LVL11
+ 1246 01bc FE070000 		.4byte	0x7fe
+ 1247 01c0 0A       		.uleb128 0xa
+ 1248 01c1 01       		.uleb128 0x1
+ 1249 01c2 50       		.byte	0x50
+ 1250 01c3 01       		.uleb128 0x1
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 29
+
+
+ 1251 01c4 31       		.byte	0x31
+ 1252 01c5 00       		.byte	0
+ 1253 01c6 00       		.byte	0
+ 1254 01c7 0B       		.uleb128 0xb
+ 1255 01c8 6C000000 		.4byte	.LASF82
+ 1256 01cc 01       		.byte	0x1
+ 1257 01cd 2B       		.byte	0x2b
+ 1258 01ce 6F000000 		.4byte	0x6f
+ 1259 01d2 00000000 		.4byte	.LFB63
+ 1260 01d6 14040000 		.4byte	.LFE63-.LFB63
+ 1261 01da 01       		.uleb128 0x1
+ 1262 01db 9C       		.byte	0x9c
+ 1263 01dc 08060000 		.4byte	0x608
+ 1264 01e0 08       		.uleb128 0x8
+ 1265 01e1 08000000 		.4byte	.LVL12
+ 1266 01e5 09080000 		.4byte	0x809
+ 1267 01e9 08       		.uleb128 0x8
+ 1268 01ea 0C000000 		.4byte	.LVL13
+ 1269 01ee 14080000 		.4byte	0x814
+ 1270 01f2 08       		.uleb128 0x8
+ 1271 01f3 10000000 		.4byte	.LVL14
+ 1272 01f7 1F080000 		.4byte	0x81f
+ 1273 01fb 08       		.uleb128 0x8
+ 1274 01fc 14000000 		.4byte	.LVL15
+ 1275 0200 DD070000 		.4byte	0x7dd
+ 1276 0204 08       		.uleb128 0x8
+ 1277 0205 18000000 		.4byte	.LVL16
+ 1278 0209 2A080000 		.4byte	0x82a
+ 1279 020d 0C       		.uleb128 0xc
+ 1280 020e 1E000000 		.4byte	.LVL17
+ 1281 0212 35080000 		.4byte	0x835
+ 1282 0216 24020000 		.4byte	0x224
+ 1283 021a 0A       		.uleb128 0xa
+ 1284 021b 01       		.uleb128 0x1
+ 1285 021c 50       		.byte	0x50
+ 1286 021d 05       		.uleb128 0x5
+ 1287 021e 03       		.byte	0x3
+ 1288 021f 00000000 		.4byte	ISR_Timer
+ 1289 0223 00       		.byte	0
+ 1290 0224 0C       		.uleb128 0xc
+ 1291 0225 24000000 		.4byte	.LVL18
+ 1292 0229 40080000 		.4byte	0x840
+ 1293 022d 3B020000 		.4byte	0x23b
+ 1294 0231 0A       		.uleb128 0xa
+ 1295 0232 01       		.uleb128 0x1
+ 1296 0233 50       		.byte	0x50
+ 1297 0234 05       		.uleb128 0x5
+ 1298 0235 03       		.byte	0x3
+ 1299 0236 00000000 		.4byte	Contador
+ 1300 023a 00       		.byte	0
+ 1301 023b 0C       		.uleb128 0xc
+ 1302 023c 2A000000 		.4byte	.LVL19
+ 1303 0240 4B080000 		.4byte	0x84b
+ 1304 0244 52020000 		.4byte	0x252
+ 1305 0248 0A       		.uleb128 0xa
+ 1306 0249 01       		.uleb128 0x1
+ 1307 024a 50       		.byte	0x50
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 30
+
+
+ 1308 024b 05       		.uleb128 0x5
+ 1309 024c 03       		.byte	0x3
+ 1310 024d 00000000 		.4byte	Medicion_1
+ 1311 0251 00       		.byte	0
+ 1312 0252 0C       		.uleb128 0xc
+ 1313 0253 30000000 		.4byte	.LVL20
+ 1314 0257 56080000 		.4byte	0x856
+ 1315 025b 69020000 		.4byte	0x269
+ 1316 025f 0A       		.uleb128 0xa
+ 1317 0260 01       		.uleb128 0x1
+ 1318 0261 50       		.byte	0x50
+ 1319 0262 05       		.uleb128 0x5
+ 1320 0263 03       		.byte	0x3
+ 1321 0264 00000000 		.4byte	Medicion_2
+ 1322 0268 00       		.byte	0
+ 1323 0269 08       		.uleb128 0x8
+ 1324 026a 34000000 		.4byte	.LVL21
+ 1325 026e 61080000 		.4byte	0x861
+ 1326 0272 08       		.uleb128 0x8
+ 1327 0273 38000000 		.4byte	.LVL22
+ 1328 0277 6C080000 		.4byte	0x86c
+ 1329 027b 08       		.uleb128 0x8
+ 1330 027c 3C000000 		.4byte	.LVL23
+ 1331 0280 77080000 		.4byte	0x877
+ 1332 0284 0C       		.uleb128 0xc
+ 1333 0285 42000000 		.4byte	.LVL24
+ 1334 0289 82080000 		.4byte	0x882
+ 1335 028d 97020000 		.4byte	0x297
+ 1336 0291 0A       		.uleb128 0xa
+ 1337 0292 01       		.uleb128 0x1
+ 1338 0293 50       		.byte	0x50
+ 1339 0294 01       		.uleb128 0x1
+ 1340 0295 30       		.byte	0x30
+ 1341 0296 00       		.byte	0
+ 1342 0297 08       		.uleb128 0x8
+ 1343 0298 46000000 		.4byte	.LVL25
+ 1344 029c 8D080000 		.4byte	0x88d
+ 1345 02a0 08       		.uleb128 0x8
+ 1346 02a1 9C000000 		.4byte	.LVL26
+ 1347 02a5 1F080000 		.4byte	0x81f
+ 1348 02a9 0C       		.uleb128 0xc
+ 1349 02aa D8000000 		.4byte	.LVL27
+ 1350 02ae E8070000 		.4byte	0x7e8
+ 1351 02b2 BC020000 		.4byte	0x2bc
+ 1352 02b6 0A       		.uleb128 0xa
+ 1353 02b7 01       		.uleb128 0x1
+ 1354 02b8 50       		.byte	0x50
+ 1355 02b9 01       		.uleb128 0x1
+ 1356 02ba 30       		.byte	0x30
+ 1357 02bb 00       		.byte	0
+ 1358 02bc 08       		.uleb128 0x8
+ 1359 02bd DC000000 		.4byte	.LVL28
+ 1360 02c1 98080000 		.4byte	0x898
+ 1361 02c5 08       		.uleb128 0x8
+ 1362 02c6 E6000000 		.4byte	.LVL29
+ 1363 02ca A2010000 		.4byte	0x1a2
+ 1364 02ce 0C       		.uleb128 0xc
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 31
+
+
+ 1365 02cf 1E010000 		.4byte	.LVL30
+ 1366 02d3 E8070000 		.4byte	0x7e8
+ 1367 02d7 E1020000 		.4byte	0x2e1
+ 1368 02db 0A       		.uleb128 0xa
+ 1369 02dc 01       		.uleb128 0x1
+ 1370 02dd 50       		.byte	0x50
+ 1371 02de 01       		.uleb128 0x1
+ 1372 02df 30       		.byte	0x30
+ 1373 02e0 00       		.byte	0
+ 1374 02e1 08       		.uleb128 0x8
+ 1375 02e2 22010000 		.4byte	.LVL31
+ 1376 02e6 98080000 		.4byte	0x898
+ 1377 02ea 08       		.uleb128 0x8
+ 1378 02eb 26010000 		.4byte	.LVL32
+ 1379 02ef A3080000 		.4byte	0x8a3
+ 1380 02f3 08       		.uleb128 0x8
+ 1381 02f4 66010000 		.4byte	.LVL33
+ 1382 02f8 A2010000 		.4byte	0x1a2
+ 1383 02fc 0C       		.uleb128 0xc
+ 1384 02fd 6E010000 		.4byte	.LVL34
+ 1385 0301 AE080000 		.4byte	0x8ae
+ 1386 0305 14030000 		.4byte	0x314
+ 1387 0309 0A       		.uleb128 0xa
+ 1388 030a 01       		.uleb128 0x1
+ 1389 030b 50       		.byte	0x50
+ 1390 030c 01       		.uleb128 0x1
+ 1391 030d 30       		.byte	0x30
+ 1392 030e 0A       		.uleb128 0xa
+ 1393 030f 01       		.uleb128 0x1
+ 1394 0310 51       		.byte	0x51
+ 1395 0311 01       		.uleb128 0x1
+ 1396 0312 30       		.byte	0x30
+ 1397 0313 00       		.byte	0
+ 1398 0314 0C       		.uleb128 0xc
+ 1399 0315 74010000 		.4byte	.LVL35
+ 1400 0319 B9080000 		.4byte	0x8b9
+ 1401 031d 2B030000 		.4byte	0x32b
+ 1402 0321 0A       		.uleb128 0xa
+ 1403 0322 01       		.uleb128 0x1
+ 1404 0323 50       		.byte	0x50
+ 1405 0324 05       		.uleb128 0x5
+ 1406 0325 03       		.byte	0x3
+ 1407 0326 00000000 		.4byte	.LC0
+ 1408 032a 00       		.byte	0
+ 1409 032b 08       		.uleb128 0x8
+ 1410 032c 88010000 		.4byte	.LVL36
+ 1411 0330 C4080000 		.4byte	0x8c4
+ 1412 0334 0C       		.uleb128 0xc
+ 1413 0335 8E010000 		.4byte	.LVL37
+ 1414 0339 CF080000 		.4byte	0x8cf
+ 1415 033d 48030000 		.4byte	0x348
+ 1416 0341 0A       		.uleb128 0xa
+ 1417 0342 01       		.uleb128 0x1
+ 1418 0343 50       		.byte	0x50
+ 1419 0344 02       		.uleb128 0x2
+ 1420 0345 08       		.byte	0x8
+ 1421 0346 2E       		.byte	0x2e
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 32
+
+
+ 1422 0347 00       		.byte	0
+ 1423 0348 08       		.uleb128 0x8
+ 1424 0349 B0010000 		.4byte	.LVL38
+ 1425 034d C4080000 		.4byte	0x8c4
+ 1426 0351 08       		.uleb128 0x8
+ 1427 0352 CE010000 		.4byte	.LVL39
+ 1428 0356 C4080000 		.4byte	0x8c4
+ 1429 035a 08       		.uleb128 0x8
+ 1430 035b EA010000 		.4byte	.LVL40
+ 1431 035f C4080000 		.4byte	0x8c4
+ 1432 0363 08       		.uleb128 0x8
+ 1433 0364 00020000 		.4byte	.LVL41
+ 1434 0368 C4080000 		.4byte	0x8c4
+ 1435 036c 0C       		.uleb128 0xc
+ 1436 036d 08020000 		.4byte	.LVL42
+ 1437 0371 B9080000 		.4byte	0x8b9
+ 1438 0375 80030000 		.4byte	0x380
+ 1439 0379 0A       		.uleb128 0xa
+ 1440 037a 01       		.uleb128 0x1
+ 1441 037b 50       		.byte	0x50
+ 1442 037c 02       		.uleb128 0x2
+ 1443 037d 76       		.byte	0x76
+ 1444 037e 00       		.sleb128 0
+ 1445 037f 00       		.byte	0
+ 1446 0380 0C       		.uleb128 0xc
+ 1447 0381 10020000 		.4byte	.LVL43
+ 1448 0385 AE080000 		.4byte	0x8ae
+ 1449 0389 98030000 		.4byte	0x398
+ 1450 038d 0A       		.uleb128 0xa
+ 1451 038e 01       		.uleb128 0x1
+ 1452 038f 50       		.byte	0x50
+ 1453 0390 01       		.uleb128 0x1
+ 1454 0391 31       		.byte	0x31
+ 1455 0392 0A       		.uleb128 0xa
+ 1456 0393 01       		.uleb128 0x1
+ 1457 0394 51       		.byte	0x51
+ 1458 0395 01       		.uleb128 0x1
+ 1459 0396 30       		.byte	0x30
+ 1460 0397 00       		.byte	0
+ 1461 0398 0C       		.uleb128 0xc
+ 1462 0399 16020000 		.4byte	.LVL44
+ 1463 039d B9080000 		.4byte	0x8b9
+ 1464 03a1 AF030000 		.4byte	0x3af
+ 1465 03a5 0A       		.uleb128 0xa
+ 1466 03a6 01       		.uleb128 0x1
+ 1467 03a7 50       		.byte	0x50
+ 1468 03a8 05       		.uleb128 0x5
+ 1469 03a9 03       		.byte	0x3
+ 1470 03aa 08000000 		.4byte	.LC2
+ 1471 03ae 00       		.byte	0
+ 1472 03af 08       		.uleb128 0x8
+ 1473 03b0 24020000 		.4byte	.LVL45
+ 1474 03b4 C4080000 		.4byte	0x8c4
+ 1475 03b8 0C       		.uleb128 0xc
+ 1476 03b9 2A020000 		.4byte	.LVL46
+ 1477 03bd CF080000 		.4byte	0x8cf
+ 1478 03c1 CC030000 		.4byte	0x3cc
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 33
+
+
+ 1479 03c5 0A       		.uleb128 0xa
+ 1480 03c6 01       		.uleb128 0x1
+ 1481 03c7 50       		.byte	0x50
+ 1482 03c8 02       		.uleb128 0x2
+ 1483 03c9 08       		.byte	0x8
+ 1484 03ca 2E       		.byte	0x2e
+ 1485 03cb 00       		.byte	0
+ 1486 03cc 08       		.uleb128 0x8
+ 1487 03cd 46020000 		.4byte	.LVL47
+ 1488 03d1 C4080000 		.4byte	0x8c4
+ 1489 03d5 08       		.uleb128 0x8
+ 1490 03d6 62020000 		.4byte	.LVL48
+ 1491 03da C4080000 		.4byte	0x8c4
+ 1492 03de 08       		.uleb128 0x8
+ 1493 03df 7E020000 		.4byte	.LVL49
+ 1494 03e3 C4080000 		.4byte	0x8c4
+ 1495 03e7 08       		.uleb128 0x8
+ 1496 03e8 94020000 		.4byte	.LVL50
+ 1497 03ec C4080000 		.4byte	0x8c4
+ 1498 03f0 0C       		.uleb128 0xc
+ 1499 03f1 9A020000 		.4byte	.LVL51
+ 1500 03f5 B9080000 		.4byte	0x8b9
+ 1501 03f9 04040000 		.4byte	0x404
+ 1502 03fd 0A       		.uleb128 0xa
+ 1503 03fe 01       		.uleb128 0x1
+ 1504 03ff 50       		.byte	0x50
+ 1505 0400 02       		.uleb128 0x2
+ 1506 0401 76       		.byte	0x76
+ 1507 0402 00       		.sleb128 0
+ 1508 0403 00       		.byte	0
+ 1509 0404 0C       		.uleb128 0xc
+ 1510 0405 A2020000 		.4byte	.LVL52
+ 1511 0409 AE080000 		.4byte	0x8ae
+ 1512 040d 1C040000 		.4byte	0x41c
+ 1513 0411 0A       		.uleb128 0xa
+ 1514 0412 01       		.uleb128 0x1
+ 1515 0413 50       		.byte	0x50
+ 1516 0414 01       		.uleb128 0x1
+ 1517 0415 32       		.byte	0x32
+ 1518 0416 0A       		.uleb128 0xa
+ 1519 0417 01       		.uleb128 0x1
+ 1520 0418 51       		.byte	0x51
+ 1521 0419 01       		.uleb128 0x1
+ 1522 041a 33       		.byte	0x33
+ 1523 041b 00       		.byte	0
+ 1524 041c 0C       		.uleb128 0xc
+ 1525 041d A8020000 		.4byte	.LVL53
+ 1526 0421 B9080000 		.4byte	0x8b9
+ 1527 0425 33040000 		.4byte	0x433
+ 1528 0429 0A       		.uleb128 0xa
+ 1529 042a 01       		.uleb128 0x1
+ 1530 042b 50       		.byte	0x50
+ 1531 042c 05       		.uleb128 0x5
+ 1532 042d 03       		.byte	0x3
+ 1533 042e 0C000000 		.4byte	.LC3
+ 1534 0432 00       		.byte	0
+ 1535 0433 0C       		.uleb128 0xc
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 34
+
+
+ 1536 0434 B0020000 		.4byte	.LVL54
+ 1537 0438 AE080000 		.4byte	0x8ae
+ 1538 043c 4B040000 		.4byte	0x44b
+ 1539 0440 0A       		.uleb128 0xa
+ 1540 0441 01       		.uleb128 0x1
+ 1541 0442 50       		.byte	0x50
+ 1542 0443 01       		.uleb128 0x1
+ 1543 0444 33       		.byte	0x33
+ 1544 0445 0A       		.uleb128 0xa
+ 1545 0446 01       		.uleb128 0x1
+ 1546 0447 51       		.byte	0x51
+ 1547 0448 01       		.uleb128 0x1
+ 1548 0449 32       		.byte	0x32
+ 1549 044a 00       		.byte	0
+ 1550 044b 08       		.uleb128 0x8
+ 1551 044c BE020000 		.4byte	.LVL55
+ 1552 0450 C4080000 		.4byte	0x8c4
+ 1553 0454 0C       		.uleb128 0xc
+ 1554 0455 C4020000 		.4byte	.LVL56
+ 1555 0459 CF080000 		.4byte	0x8cf
+ 1556 045d 68040000 		.4byte	0x468
+ 1557 0461 0A       		.uleb128 0xa
+ 1558 0462 01       		.uleb128 0x1
+ 1559 0463 50       		.byte	0x50
+ 1560 0464 02       		.uleb128 0x2
+ 1561 0465 08       		.byte	0x8
+ 1562 0466 2E       		.byte	0x2e
+ 1563 0467 00       		.byte	0
+ 1564 0468 08       		.uleb128 0x8
+ 1565 0469 E0020000 		.4byte	.LVL57
+ 1566 046d C4080000 		.4byte	0x8c4
+ 1567 0471 08       		.uleb128 0x8
+ 1568 0472 F6020000 		.4byte	.LVL58
+ 1569 0476 C4080000 		.4byte	0x8c4
+ 1570 047a 0C       		.uleb128 0xc
+ 1571 047b FC020000 		.4byte	.LVL59
+ 1572 047f B9080000 		.4byte	0x8b9
+ 1573 0483 91040000 		.4byte	0x491
+ 1574 0487 0A       		.uleb128 0xa
+ 1575 0488 01       		.uleb128 0x1
+ 1576 0489 50       		.byte	0x50
+ 1577 048a 05       		.uleb128 0x5
+ 1578 048b 03       		.byte	0x3
+ 1579 048c 1C000000 		.4byte	.LC4
+ 1580 0490 00       		.byte	0
+ 1581 0491 0C       		.uleb128 0xc
+ 1582 0492 02030000 		.4byte	.LVL60
+ 1583 0496 CF080000 		.4byte	0x8cf
+ 1584 049a A5040000 		.4byte	0x4a5
+ 1585 049e 0A       		.uleb128 0xa
+ 1586 049f 01       		.uleb128 0x1
+ 1587 04a0 50       		.byte	0x50
+ 1588 04a1 02       		.uleb128 0x2
+ 1589 04a2 08       		.byte	0x8
+ 1590 04a3 2D       		.byte	0x2d
+ 1591 04a4 00       		.byte	0
+ 1592 04a5 08       		.uleb128 0x8
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 35
+
+
+ 1593 04a6 10030000 		.4byte	.LVL61
+ 1594 04aa C4080000 		.4byte	0x8c4
+ 1595 04ae 0C       		.uleb128 0xc
+ 1596 04af 16030000 		.4byte	.LVL62
+ 1597 04b3 CF080000 		.4byte	0x8cf
+ 1598 04b7 C2040000 		.4byte	0x4c2
+ 1599 04bb 0A       		.uleb128 0xa
+ 1600 04bc 01       		.uleb128 0x1
+ 1601 04bd 50       		.byte	0x50
+ 1602 04be 02       		.uleb128 0x2
+ 1603 04bf 08       		.byte	0x8
+ 1604 04c0 2E       		.byte	0x2e
+ 1605 04c1 00       		.byte	0
+ 1606 04c2 0C       		.uleb128 0xc
+ 1607 04c3 36030000 		.4byte	.LVL63
+ 1608 04c7 C4080000 		.4byte	0x8c4
+ 1609 04cb F5040000 		.4byte	0x4f5
+ 1610 04cf 0A       		.uleb128 0xa
+ 1611 04d0 01       		.uleb128 0x1
+ 1612 04d1 50       		.byte	0x50
+ 1613 04d2 21       		.uleb128 0x21
+ 1614 04d3 78       		.byte	0x78
+ 1615 04d4 00       		.sleb128 0
+ 1616 04d5 78       		.byte	0x78
+ 1617 04d6 00       		.sleb128 0
+ 1618 04d7 F7       		.byte	0xf7
+ 1619 04d8 2C       		.uleb128 0x2c
+ 1620 04d9 F7       		.byte	0xf7
+ 1621 04da 25       		.uleb128 0x25
+ 1622 04db 74       		.byte	0x74
+ 1623 04dc 00       		.sleb128 0
+ 1624 04dd F7       		.byte	0xf7
+ 1625 04de 2C       		.uleb128 0x2c
+ 1626 04df F7       		.byte	0xf7
+ 1627 04e0 25       		.uleb128 0x25
+ 1628 04e1 1E       		.byte	0x1e
+ 1629 04e2 08       		.byte	0x8
+ 1630 04e3 20       		.byte	0x20
+ 1631 04e4 F7       		.byte	0xf7
+ 1632 04e5 25       		.uleb128 0x25
+ 1633 04e6 25       		.byte	0x25
+ 1634 04e7 F7       		.byte	0xf7
+ 1635 04e8 2C       		.uleb128 0x2c
+ 1636 04e9 33       		.byte	0x33
+ 1637 04ea 25       		.byte	0x25
+ 1638 04eb 35       		.byte	0x35
+ 1639 04ec 1E       		.byte	0x1e
+ 1640 04ed 31       		.byte	0x31
+ 1641 04ee 24       		.byte	0x24
+ 1642 04ef 1C       		.byte	0x1c
+ 1643 04f0 0A       		.byte	0xa
+ 1644 04f1 FFFF     		.2byte	0xffff
+ 1645 04f3 1A       		.byte	0x1a
+ 1646 04f4 00       		.byte	0
+ 1647 04f5 0C       		.uleb128 0xc
+ 1648 04f6 52030000 		.4byte	.LVL64
+ 1649 04fa C4080000 		.4byte	0x8c4
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 36
+
+
+ 1650 04fe 28050000 		.4byte	0x528
+ 1651 0502 0A       		.uleb128 0xa
+ 1652 0503 01       		.uleb128 0x1
+ 1653 0504 50       		.byte	0x50
+ 1654 0505 21       		.uleb128 0x21
+ 1655 0506 77       		.byte	0x77
+ 1656 0507 00       		.sleb128 0
+ 1657 0508 77       		.byte	0x77
+ 1658 0509 00       		.sleb128 0
+ 1659 050a F7       		.byte	0xf7
+ 1660 050b 2C       		.uleb128 0x2c
+ 1661 050c F7       		.byte	0xf7
+ 1662 050d 25       		.uleb128 0x25
+ 1663 050e 74       		.byte	0x74
+ 1664 050f 00       		.sleb128 0
+ 1665 0510 F7       		.byte	0xf7
+ 1666 0511 2C       		.uleb128 0x2c
+ 1667 0512 F7       		.byte	0xf7
+ 1668 0513 25       		.uleb128 0x25
+ 1669 0514 1E       		.byte	0x1e
+ 1670 0515 08       		.byte	0x8
+ 1671 0516 20       		.byte	0x20
+ 1672 0517 F7       		.byte	0xf7
+ 1673 0518 25       		.uleb128 0x25
+ 1674 0519 25       		.byte	0x25
+ 1675 051a F7       		.byte	0xf7
+ 1676 051b 2C       		.uleb128 0x2c
+ 1677 051c 33       		.byte	0x33
+ 1678 051d 25       		.byte	0x25
+ 1679 051e 35       		.byte	0x35
+ 1680 051f 1E       		.byte	0x1e
+ 1681 0520 31       		.byte	0x31
+ 1682 0521 24       		.byte	0x24
+ 1683 0522 1C       		.byte	0x1c
+ 1684 0523 0A       		.byte	0xa
+ 1685 0524 FFFF     		.2byte	0xffff
+ 1686 0526 1A       		.byte	0x1a
+ 1687 0527 00       		.byte	0
+ 1688 0528 08       		.uleb128 0x8
+ 1689 0529 6E030000 		.4byte	.LVL65
+ 1690 052d C4080000 		.4byte	0x8c4
+ 1691 0531 08       		.uleb128 0x8
+ 1692 0532 84030000 		.4byte	.LVL66
+ 1693 0536 C4080000 		.4byte	0x8c4
+ 1694 053a 0C       		.uleb128 0xc
+ 1695 053b 8A030000 		.4byte	.LVL67
+ 1696 053f B9080000 		.4byte	0x8b9
+ 1697 0543 4E050000 		.4byte	0x54e
+ 1698 0547 0A       		.uleb128 0xa
+ 1699 0548 01       		.uleb128 0x1
+ 1700 0549 50       		.byte	0x50
+ 1701 054a 02       		.uleb128 0x2
+ 1702 054b 76       		.byte	0x76
+ 1703 054c 00       		.sleb128 0
+ 1704 054d 00       		.byte	0
+ 1705 054e 0C       		.uleb128 0xc
+ 1706 054f 92030000 		.4byte	.LVL68
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 37
+
+
+ 1707 0553 AE080000 		.4byte	0x8ae
+ 1708 0557 66050000 		.4byte	0x566
+ 1709 055b 0A       		.uleb128 0xa
+ 1710 055c 01       		.uleb128 0x1
+ 1711 055d 50       		.byte	0x50
+ 1712 055e 01       		.uleb128 0x1
+ 1713 055f 30       		.byte	0x30
+ 1714 0560 0A       		.uleb128 0xa
+ 1715 0561 01       		.uleb128 0x1
+ 1716 0562 51       		.byte	0x51
+ 1717 0563 01       		.uleb128 0x1
+ 1718 0564 3D       		.byte	0x3d
+ 1719 0565 00       		.byte	0
+ 1720 0566 0C       		.uleb128 0xc
+ 1721 0567 98030000 		.4byte	.LVL69
+ 1722 056b B9080000 		.4byte	0x8b9
+ 1723 056f 7D050000 		.4byte	0x57d
+ 1724 0573 0A       		.uleb128 0xa
+ 1725 0574 01       		.uleb128 0x1
+ 1726 0575 50       		.byte	0x50
+ 1727 0576 05       		.uleb128 0x5
+ 1728 0577 03       		.byte	0x3
+ 1729 0578 20000000 		.4byte	.LC5
+ 1730 057c 00       		.byte	0
+ 1731 057d 0C       		.uleb128 0xc
+ 1732 057e A0030000 		.4byte	.LVL70
+ 1733 0582 AE080000 		.4byte	0x8ae
+ 1734 0586 95050000 		.4byte	0x595
+ 1735 058a 0A       		.uleb128 0xa
+ 1736 058b 01       		.uleb128 0x1
+ 1737 058c 50       		.byte	0x50
+ 1738 058d 01       		.uleb128 0x1
+ 1739 058e 31       		.byte	0x31
+ 1740 058f 0A       		.uleb128 0xa
+ 1741 0590 01       		.uleb128 0x1
+ 1742 0591 51       		.byte	0x51
+ 1743 0592 01       		.uleb128 0x1
+ 1744 0593 3D       		.byte	0x3d
+ 1745 0594 00       		.byte	0
+ 1746 0595 08       		.uleb128 0x8
+ 1747 0596 AE030000 		.4byte	.LVL71
+ 1748 059a C4080000 		.4byte	0x8c4
+ 1749 059e 0C       		.uleb128 0xc
+ 1750 059f B4030000 		.4byte	.LVL72
+ 1751 05a3 CF080000 		.4byte	0x8cf
+ 1752 05a7 B2050000 		.4byte	0x5b2
+ 1753 05ab 0A       		.uleb128 0xa
+ 1754 05ac 01       		.uleb128 0x1
+ 1755 05ad 50       		.byte	0x50
+ 1756 05ae 02       		.uleb128 0x2
+ 1757 05af 08       		.byte	0x8
+ 1758 05b0 2E       		.byte	0x2e
+ 1759 05b1 00       		.byte	0
+ 1760 05b2 08       		.uleb128 0x8
+ 1761 05b3 CA030000 		.4byte	.LVL73
+ 1762 05b7 C4080000 		.4byte	0x8c4
+ 1763 05bb 0C       		.uleb128 0xc
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 38
+
+
+ 1764 05bc D0030000 		.4byte	.LVL74
+ 1765 05c0 CF080000 		.4byte	0x8cf
+ 1766 05c4 CF050000 		.4byte	0x5cf
+ 1767 05c8 0A       		.uleb128 0xa
+ 1768 05c9 01       		.uleb128 0x1
+ 1769 05ca 50       		.byte	0x50
+ 1770 05cb 02       		.uleb128 0x2
+ 1771 05cc 09       		.byte	0x9
+ 1772 05cd DF       		.byte	0xdf
+ 1773 05ce 00       		.byte	0
+ 1774 05cf 0C       		.uleb128 0xc
+ 1775 05d0 D6030000 		.4byte	.LVL75
+ 1776 05d4 CF080000 		.4byte	0x8cf
+ 1777 05d8 E3050000 		.4byte	0x5e3
+ 1778 05dc 0A       		.uleb128 0xa
+ 1779 05dd 01       		.uleb128 0x1
+ 1780 05de 50       		.byte	0x50
+ 1781 05df 02       		.uleb128 0x2
+ 1782 05e0 08       		.byte	0x8
+ 1783 05e1 43       		.byte	0x43
+ 1784 05e2 00       		.byte	0
+ 1785 05e3 0C       		.uleb128 0xc
+ 1786 05e4 DE030000 		.4byte	.LVL76
+ 1787 05e8 DA080000 		.4byte	0x8da
+ 1788 05ec F8050000 		.4byte	0x5f8
+ 1789 05f0 0A       		.uleb128 0xa
+ 1790 05f1 01       		.uleb128 0x1
+ 1791 05f2 50       		.byte	0x50
+ 1792 05f3 03       		.uleb128 0x3
+ 1793 05f4 0A       		.byte	0xa
+ 1794 05f5 F401     		.2byte	0x1f4
+ 1795 05f7 00       		.byte	0
+ 1796 05f8 09       		.uleb128 0x9
+ 1797 05f9 E4030000 		.4byte	.LVL77
+ 1798 05fd FE070000 		.4byte	0x7fe
+ 1799 0601 0A       		.uleb128 0xa
+ 1800 0602 01       		.uleb128 0x1
+ 1801 0603 50       		.byte	0x50
+ 1802 0604 01       		.uleb128 0x1
+ 1803 0605 31       		.byte	0x31
+ 1804 0606 00       		.byte	0
+ 1805 0607 00       		.byte	0
+ 1806 0608 0D       		.uleb128 0xd
+ 1807 0609 A6030000 		.4byte	.LASF25
+ 1808 060d 05       		.byte	0x5
+ 1809 060e 1207     		.2byte	0x712
+ 1810 0610 14060000 		.4byte	0x614
+ 1811 0614 0E       		.uleb128 0xe
+ 1812 0615 76000000 		.4byte	0x76
+ 1813 0619 0F       		.uleb128 0xf
+ 1814 061a 5A000000 		.4byte	.LASF26
+ 1815 061e 01       		.byte	0x1
+ 1816 061f 12       		.byte	0x12
+ 1817 0620 8D000000 		.4byte	0x8d
+ 1818 0624 05       		.uleb128 0x5
+ 1819 0625 03       		.byte	0x3
+ 1820 0626 00000000 		.4byte	VALADC
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 39
+
+
+ 1821 062a 0F       		.uleb128 0xf
+ 1822 062b 18040000 		.4byte	.LASF27
+ 1823 062f 01       		.byte	0x1
+ 1824 0630 13       		.byte	0x13
+ 1825 0631 99000000 		.4byte	0x99
+ 1826 0635 05       		.uleb128 0x5
+ 1827 0636 03       		.byte	0x3
+ 1828 0637 00000000 		.4byte	Temperatura
+ 1829 063b 0F       		.uleb128 0xf
+ 1830 063c 59020000 		.4byte	.LASF28
+ 1831 0640 01       		.byte	0x1
+ 1832 0641 14       		.byte	0x14
+ 1833 0642 A5000000 		.4byte	0xa5
+ 1834 0646 05       		.uleb128 0x5
+ 1835 0647 03       		.byte	0x3
+ 1836 0648 00000000 		.4byte	status
+ 1837 064c 0F       		.uleb128 0xf
+ 1838 064d C9010000 		.4byte	.LASF29
+ 1839 0651 01       		.byte	0x1
+ 1840 0652 15       		.byte	0x15
+ 1841 0653 B1000000 		.4byte	0xb1
+ 1842 0657 05       		.uleb128 0x5
+ 1843 0658 03       		.byte	0x3
+ 1844 0659 00000000 		.4byte	Count_M1
+ 1845 065d 0F       		.uleb128 0xf
+ 1846 065e D2010000 		.4byte	.LASF30
+ 1847 0662 01       		.byte	0x1
+ 1848 0663 16       		.byte	0x16
+ 1849 0664 B1000000 		.4byte	0xb1
+ 1850 0668 05       		.uleb128 0x5
+ 1851 0669 03       		.byte	0x3
+ 1852 066a 00000000 		.4byte	Count_M2
+ 1853 066e 0F       		.uleb128 0xf
+ 1854 066f 4A040000 		.4byte	.LASF31
+ 1855 0673 01       		.byte	0x1
+ 1856 0674 17       		.byte	0x17
+ 1857 0675 A5000000 		.4byte	0xa5
+ 1858 0679 05       		.uleb128 0x5
+ 1859 067a 03       		.byte	0x3
+ 1860 067b 00000000 		.4byte	ban_M1
+ 1861 067f 0F       		.uleb128 0xf
+ 1862 0680 51040000 		.4byte	.LASF32
+ 1863 0684 01       		.byte	0x1
+ 1864 0685 18       		.byte	0x18
+ 1865 0686 A5000000 		.4byte	0xa5
+ 1866 068a 05       		.uleb128 0x5
+ 1867 068b 03       		.byte	0x3
+ 1868 068c 00000000 		.4byte	ban_M2
+ 1869 0690 0F       		.uleb128 0xf
+ 1870 0691 29000000 		.4byte	.LASF33
+ 1871 0695 01       		.byte	0x1
+ 1872 0696 19       		.byte	0x19
+ 1873 0697 A5000000 		.4byte	0xa5
+ 1874 069b 05       		.uleb128 0x5
+ 1875 069c 03       		.byte	0x3
+ 1876 069d 00000000 		.4byte	ban_M11
+ 1877 06a1 0F       		.uleb128 0xf
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 40
+
+
+ 1878 06a2 16010000 		.4byte	.LASF34
+ 1879 06a6 01       		.byte	0x1
+ 1880 06a7 1A       		.byte	0x1a
+ 1881 06a8 A5000000 		.4byte	0xa5
+ 1882 06ac 05       		.uleb128 0x5
+ 1883 06ad 03       		.byte	0x3
+ 1884 06ae 00000000 		.4byte	ban_M22
+ 1885 06b2 0F       		.uleb128 0xf
+ 1886 06b3 15030000 		.4byte	.LASF35
+ 1887 06b7 01       		.byte	0x1
+ 1888 06b8 1B       		.byte	0x1b
+ 1889 06b9 A5000000 		.4byte	0xa5
+ 1890 06bd 05       		.uleb128 0x5
+ 1891 06be 03       		.byte	0x3
+ 1892 06bf 00000000 		.4byte	ban_trig1
+ 1893 06c3 0F       		.uleb128 0xf
+ 1894 06c4 90030000 		.4byte	.LASF36
+ 1895 06c8 01       		.byte	0x1
+ 1896 06c9 1C       		.byte	0x1c
+ 1897 06ca A5000000 		.4byte	0xa5
+ 1898 06ce 05       		.uleb128 0x5
+ 1899 06cf 03       		.byte	0x3
+ 1900 06d0 00000000 		.4byte	ban_trig2
+ 1901 06d4 0F       		.uleb128 0xf
+ 1902 06d5 35040000 		.4byte	.LASF37
+ 1903 06d9 01       		.byte	0x1
+ 1904 06da 1D       		.byte	0x1d
+ 1905 06db 99000000 		.4byte	0x99
+ 1906 06df 05       		.uleb128 0x5
+ 1907 06e0 03       		.byte	0x3
+ 1908 06e1 00000000 		.4byte	Velocidad
+ 1909 06e5 0F       		.uleb128 0xf
+ 1910 06e6 82000000 		.4byte	.LASF38
+ 1911 06ea 01       		.byte	0x1
+ 1912 06eb 1E       		.byte	0x1e
+ 1913 06ec 99000000 		.4byte	0x99
+ 1914 06f0 05       		.uleb128 0x5
+ 1915 06f1 03       		.byte	0x3
+ 1916 06f2 00000000 		.4byte	Distancia
+ 1917 06f6 0F       		.uleb128 0xf
+ 1918 06f7 AA000000 		.4byte	.LASF39
+ 1919 06fb 01       		.byte	0x1
+ 1920 06fc 1F       		.byte	0x1f
+ 1921 06fd 99000000 		.4byte	0x99
+ 1922 0701 05       		.uleb128 0x5
+ 1923 0702 03       		.byte	0x3
+ 1924 0703 00000000 		.4byte	Distancia1
+ 1925 0707 0F       		.uleb128 0xf
+ 1926 0708 B5000000 		.4byte	.LASF40
+ 1927 070c 01       		.byte	0x1
+ 1928 070d 20       		.byte	0x20
+ 1929 070e 99000000 		.4byte	0x99
+ 1930 0712 05       		.uleb128 0x5
+ 1931 0713 03       		.byte	0x3
+ 1932 0714 00000000 		.4byte	Distancia2
+ 1933 0718 0F       		.uleb128 0xf
+ 1934 0719 3F040000 		.4byte	.LASF41
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 41
+
+
+ 1935 071d 01       		.byte	0x1
+ 1936 071e 21       		.byte	0x21
+ 1937 071f 99000000 		.4byte	0x99
+ 1938 0723 05       		.uleb128 0x5
+ 1939 0724 03       		.byte	0x3
+ 1940 0725 00000000 		.4byte	Distancia3
+ 1941 0729 0F       		.uleb128 0xf
+ 1942 072a 1F030000 		.4byte	.LASF42
+ 1943 072e 01       		.byte	0x1
+ 1944 072f 22       		.byte	0x22
+ 1945 0730 A5000000 		.4byte	0xa5
+ 1946 0734 05       		.uleb128 0x5
+ 1947 0735 03       		.byte	0x3
+ 1948 0736 00000000 		.4byte	Calculos
+ 1949 073a 0F       		.uleb128 0xf
+ 1950 073b D3000000 		.4byte	.LASF43
+ 1951 073f 01       		.byte	0x1
+ 1952 0740 23       		.byte	0x23
+ 1953 0741 99000000 		.4byte	0x99
+ 1954 0745 05       		.uleb128 0x5
+ 1955 0746 03       		.byte	0x3
+ 1956 0747 00000000 		.4byte	valor1
+ 1957 074b 0F       		.uleb128 0xf
+ 1958 074c DA000000 		.4byte	.LASF44
+ 1959 0750 01       		.byte	0x1
+ 1960 0751 24       		.byte	0x24
+ 1961 0752 99000000 		.4byte	0x99
+ 1962 0756 05       		.uleb128 0x5
+ 1963 0757 03       		.byte	0x3
+ 1964 0758 00000000 		.4byte	valor2
+ 1965 075c 0F       		.uleb128 0xf
+ 1966 075d 60040000 		.4byte	.LASF45
+ 1967 0761 01       		.byte	0x1
+ 1968 0762 25       		.byte	0x25
+ 1969 0763 99000000 		.4byte	0x99
+ 1970 0767 05       		.uleb128 0x5
+ 1971 0768 03       		.byte	0x3
+ 1972 0769 00000000 		.4byte	valor3
+ 1973 076d 0F       		.uleb128 0xf
+ 1974 076e 71000000 		.4byte	.LASF46
+ 1975 0772 01       		.byte	0x1
+ 1976 0773 26       		.byte	0x26
+ 1977 0774 81000000 		.4byte	0x81
+ 1978 0778 05       		.uleb128 0x5
+ 1979 0779 03       		.byte	0x3
+ 1980 077a 00000000 		.4byte	ovf1
+ 1981 077e 0F       		.uleb128 0xf
+ 1982 077f 76000000 		.4byte	.LASF47
+ 1983 0783 01       		.byte	0x1
+ 1984 0784 27       		.byte	0x27
+ 1985 0785 81000000 		.4byte	0x81
+ 1986 0789 05       		.uleb128 0x5
+ 1987 078a 03       		.byte	0x3
+ 1988 078b 00000000 		.4byte	ovf2
+ 1989 078f 0F       		.uleb128 0xf
+ 1990 0790 AA010000 		.4byte	.LASF48
+ 1991 0794 01       		.byte	0x1
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 42
+
+
+ 1992 0795 28       		.byte	0x28
+ 1993 0796 99000000 		.4byte	0x99
+ 1994 079a 05       		.uleb128 0x5
+ 1995 079b 03       		.byte	0x3
+ 1996 079c 00000000 		.4byte	CiclosDureza
+ 1997 07a0 0F       		.uleb128 0xf
+ 1998 07a1 E1000000 		.4byte	.LASF49
+ 1999 07a5 01       		.byte	0x1
+ 2000 07a6 29       		.byte	0x29
+ 2001 07a7 81000000 		.4byte	0x81
+ 2002 07ab 05       		.uleb128 0x5
+ 2003 07ac 03       		.byte	0x3
+ 2004 07ad 00000000 		.4byte	cont
+ 2005 07b1 10       		.uleb128 0x10
+ 2006 07b2 10000000 		.4byte	.LASF50
+ 2007 07b6 10000000 		.4byte	.LASF50
+ 2008 07ba 06       		.byte	0x6
+ 2009 07bb 5E       		.byte	0x5e
+ 2010 07bc 10       		.uleb128 0x10
+ 2011 07bd F0030000 		.4byte	.LASF51
+ 2012 07c1 F0030000 		.4byte	.LASF51
+ 2013 07c5 06       		.byte	0x6
+ 2014 07c6 6B       		.byte	0x6b
+ 2015 07c7 10       		.uleb128 0x10
+ 2016 07c8 46010000 		.4byte	.LASF52
+ 2017 07cc 46010000 		.4byte	.LASF52
+ 2018 07d0 06       		.byte	0x6
+ 2019 07d1 5B       		.byte	0x5b
+ 2020 07d2 10       		.uleb128 0x10
+ 2021 07d3 B7010000 		.4byte	.LASF53
+ 2022 07d7 B7010000 		.4byte	.LASF53
+ 2023 07db 07       		.byte	0x7
+ 2024 07dc 23       		.byte	0x23
+ 2025 07dd 10       		.uleb128 0x10
+ 2026 07de E6030000 		.4byte	.LASF54
+ 2027 07e2 E6030000 		.4byte	.LASF54
+ 2028 07e6 08       		.byte	0x8
+ 2029 07e7 92       		.byte	0x92
+ 2030 07e8 10       		.uleb128 0x10
+ 2031 07e9 3C010000 		.4byte	.LASF55
+ 2032 07ed 3C010000 		.4byte	.LASF55
+ 2033 07f1 09       		.byte	0x9
+ 2034 07f2 26       		.byte	0x26
+ 2035 07f3 10       		.uleb128 0x10
+ 2036 07f4 C0000000 		.4byte	.LASF56
+ 2037 07f8 C0000000 		.4byte	.LASF56
+ 2038 07fc 0A       		.byte	0xa
+ 2039 07fd 25       		.byte	0x25
+ 2040 07fe 10       		.uleb128 0x10
+ 2041 07ff 31000000 		.4byte	.LASF57
+ 2042 0803 31000000 		.4byte	.LASF57
+ 2043 0807 0B       		.byte	0xb
+ 2044 0808 3A       		.byte	0x3a
+ 2045 0809 10       		.uleb128 0x10
+ 2046 080a 29010000 		.4byte	.LASF58
+ 2047 080e 29010000 		.4byte	.LASF58
+ 2048 0812 0C       		.byte	0xc
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 43
+
+
+ 2049 0813 34       		.byte	0x34
+ 2050 0814 10       		.uleb128 0x10
+ 2051 0815 72010000 		.4byte	.LASF59
+ 2052 0819 72010000 		.4byte	.LASF59
+ 2053 081d 0B       		.byte	0xb
+ 2054 081e 38       		.byte	0x38
+ 2055 081f 10       		.uleb128 0x10
+ 2056 0820 C6030000 		.4byte	.LASF60
+ 2057 0824 C6030000 		.4byte	.LASF60
+ 2058 0828 06       		.byte	0x6
+ 2059 0829 5A       		.byte	0x5a
+ 2060 082a 10       		.uleb128 0x10
+ 2061 082b 4C000000 		.4byte	.LASF61
+ 2062 082f 4C000000 		.4byte	.LASF61
+ 2063 0833 0D       		.byte	0xd
+ 2064 0834 4F       		.byte	0x4f
+ 2065 0835 10       		.uleb128 0x10
+ 2066 0836 34020000 		.4byte	.LASF62
+ 2067 083a 34020000 		.4byte	.LASF62
+ 2068 083e 0E       		.byte	0xe
+ 2069 083f 18       		.byte	0x18
+ 2070 0840 10       		.uleb128 0x10
+ 2071 0841 5D010000 		.4byte	.LASF63
+ 2072 0845 5D010000 		.4byte	.LASF63
+ 2073 0849 0F       		.byte	0xf
+ 2074 084a 18       		.byte	0x18
+ 2075 084b 10       		.uleb128 0x10
+ 2076 084c E7010000 		.4byte	.LASF64
+ 2077 0850 E7010000 		.4byte	.LASF64
+ 2078 0854 0A       		.byte	0xa
+ 2079 0855 18       		.byte	0x18
+ 2080 0856 10       		.uleb128 0x10
+ 2081 0857 B3030000 		.4byte	.LASF65
+ 2082 085b B3030000 		.4byte	.LASF65
+ 2083 085f 07       		.byte	0x7
+ 2084 0860 18       		.byte	0x18
+ 2085 0861 10       		.uleb128 0x10
+ 2086 0862 17020000 		.4byte	.LASF66
+ 2087 0866 17020000 		.4byte	.LASF66
+ 2088 086a 07       		.byte	0x7
+ 2089 086b 25       		.byte	0x25
+ 2090 086c 10       		.uleb128 0x10
+ 2091 086d 51010000 		.4byte	.LASF67
+ 2092 0871 51010000 		.4byte	.LASF67
+ 2093 0875 10       		.byte	0x10
+ 2094 0876 33       		.byte	0x33
+ 2095 0877 10       		.uleb128 0x10
+ 2096 0878 24040000 		.4byte	.LASF68
+ 2097 087c 24040000 		.4byte	.LASF68
+ 2098 0880 0C       		.byte	0xc
+ 2099 0881 D1       		.byte	0xd1
+ 2100 0882 10       		.uleb128 0x10
+ 2101 0883 96010000 		.4byte	.LASF69
+ 2102 0887 96010000 		.4byte	.LASF69
+ 2103 088b 0C       		.byte	0xc
+ 2104 088c 39       		.byte	0x39
+ 2105 088d 10       		.uleb128 0x10
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 44
+
+
+ 2106 088e 00000000 		.4byte	.LASF70
+ 2107 0892 00000000 		.4byte	.LASF70
+ 2108 0896 0C       		.byte	0xc
+ 2109 0897 3B       		.byte	0x3b
+ 2110 0898 10       		.uleb128 0x10
+ 2111 0899 DC030000 		.4byte	.LASF71
+ 2112 089d DC030000 		.4byte	.LASF71
+ 2113 08a1 08       		.byte	0x8
+ 2114 08a2 DC       		.byte	0xdc
+ 2115 08a3 10       		.uleb128 0x10
+ 2116 08a4 98000000 		.4byte	.LASF72
+ 2117 08a8 98000000 		.4byte	.LASF72
+ 2118 08ac 0A       		.byte	0xa
+ 2119 08ad 23       		.byte	0x23
+ 2120 08ae 10       		.uleb128 0x10
+ 2121 08af 0B040000 		.4byte	.LASF73
+ 2122 08b3 0B040000 		.4byte	.LASF73
+ 2123 08b7 0B       		.byte	0xb
+ 2124 08b8 3D       		.byte	0x3d
+ 2125 08b9 10       		.uleb128 0x10
+ 2126 08ba 07020000 		.4byte	.LASF74
+ 2127 08be 07020000 		.4byte	.LASF74
+ 2128 08c2 0B       		.byte	0xb
+ 2129 08c3 3C       		.byte	0x3c
+ 2130 08c4 10       		.uleb128 0x10
+ 2131 08c5 EE020000 		.4byte	.LASF75
+ 2132 08c9 EE020000 		.4byte	.LASF75
+ 2133 08cd 0B       		.byte	0xb
+ 2134 08ce 61       		.byte	0x61
+ 2135 08cf 10       		.uleb128 0x10
+ 2136 08d0 9A030000 		.4byte	.LASF76
+ 2137 08d4 9A030000 		.4byte	.LASF76
+ 2138 08d8 0B       		.byte	0xb
+ 2139 08d9 3E       		.byte	0x3e
+ 2140 08da 10       		.uleb128 0x10
+ 2141 08db 58040000 		.4byte	.LASF77
+ 2142 08df 58040000 		.4byte	.LASF77
+ 2143 08e3 11       		.byte	0x11
+ 2144 08e4 76       		.byte	0x76
+ 2145 08e5 00       		.byte	0
+ 2146              		.section	.debug_abbrev,"",%progbits
+ 2147              	.Ldebug_abbrev0:
+ 2148 0000 01       		.uleb128 0x1
+ 2149 0001 11       		.uleb128 0x11
+ 2150 0002 01       		.byte	0x1
+ 2151 0003 25       		.uleb128 0x25
+ 2152 0004 0E       		.uleb128 0xe
+ 2153 0005 13       		.uleb128 0x13
+ 2154 0006 0B       		.uleb128 0xb
+ 2155 0007 03       		.uleb128 0x3
+ 2156 0008 0E       		.uleb128 0xe
+ 2157 0009 1B       		.uleb128 0x1b
+ 2158 000a 0E       		.uleb128 0xe
+ 2159 000b 55       		.uleb128 0x55
+ 2160 000c 17       		.uleb128 0x17
+ 2161 000d 11       		.uleb128 0x11
+ 2162 000e 01       		.uleb128 0x1
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 45
+
+
+ 2163 000f 10       		.uleb128 0x10
+ 2164 0010 17       		.uleb128 0x17
+ 2165 0011 00       		.byte	0
+ 2166 0012 00       		.byte	0
+ 2167 0013 02       		.uleb128 0x2
+ 2168 0014 24       		.uleb128 0x24
+ 2169 0015 00       		.byte	0
+ 2170 0016 0B       		.uleb128 0xb
+ 2171 0017 0B       		.uleb128 0xb
+ 2172 0018 3E       		.uleb128 0x3e
+ 2173 0019 0B       		.uleb128 0xb
+ 2174 001a 03       		.uleb128 0x3
+ 2175 001b 0E       		.uleb128 0xe
+ 2176 001c 00       		.byte	0
+ 2177 001d 00       		.byte	0
+ 2178 001e 03       		.uleb128 0x3
+ 2179 001f 16       		.uleb128 0x16
+ 2180 0020 00       		.byte	0
+ 2181 0021 03       		.uleb128 0x3
+ 2182 0022 0E       		.uleb128 0xe
+ 2183 0023 3A       		.uleb128 0x3a
+ 2184 0024 0B       		.uleb128 0xb
+ 2185 0025 3B       		.uleb128 0x3b
+ 2186 0026 0B       		.uleb128 0xb
+ 2187 0027 49       		.uleb128 0x49
+ 2188 0028 13       		.uleb128 0x13
+ 2189 0029 00       		.byte	0
+ 2190 002a 00       		.byte	0
+ 2191 002b 04       		.uleb128 0x4
+ 2192 002c 24       		.uleb128 0x24
+ 2193 002d 00       		.byte	0
+ 2194 002e 0B       		.uleb128 0xb
+ 2195 002f 0B       		.uleb128 0xb
+ 2196 0030 3E       		.uleb128 0x3e
+ 2197 0031 0B       		.uleb128 0xb
+ 2198 0032 03       		.uleb128 0x3
+ 2199 0033 08       		.uleb128 0x8
+ 2200 0034 00       		.byte	0
+ 2201 0035 00       		.byte	0
+ 2202 0036 05       		.uleb128 0x5
+ 2203 0037 16       		.uleb128 0x16
+ 2204 0038 00       		.byte	0
+ 2205 0039 03       		.uleb128 0x3
+ 2206 003a 0E       		.uleb128 0xe
+ 2207 003b 3A       		.uleb128 0x3a
+ 2208 003c 0B       		.uleb128 0xb
+ 2209 003d 3B       		.uleb128 0x3b
+ 2210 003e 05       		.uleb128 0x5
+ 2211 003f 49       		.uleb128 0x49
+ 2212 0040 13       		.uleb128 0x13
+ 2213 0041 00       		.byte	0
+ 2214 0042 00       		.byte	0
+ 2215 0043 06       		.uleb128 0x6
+ 2216 0044 2E       		.uleb128 0x2e
+ 2217 0045 00       		.byte	0
+ 2218 0046 3F       		.uleb128 0x3f
+ 2219 0047 19       		.uleb128 0x19
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 46
+
+
+ 2220 0048 03       		.uleb128 0x3
+ 2221 0049 0E       		.uleb128 0xe
+ 2222 004a 3A       		.uleb128 0x3a
+ 2223 004b 0B       		.uleb128 0xb
+ 2224 004c 3B       		.uleb128 0x3b
+ 2225 004d 0B       		.uleb128 0xb
+ 2226 004e 27       		.uleb128 0x27
+ 2227 004f 19       		.uleb128 0x19
+ 2228 0050 11       		.uleb128 0x11
+ 2229 0051 01       		.uleb128 0x1
+ 2230 0052 12       		.uleb128 0x12
+ 2231 0053 06       		.uleb128 0x6
+ 2232 0054 40       		.uleb128 0x40
+ 2233 0055 18       		.uleb128 0x18
+ 2234 0056 9742     		.uleb128 0x2117
+ 2235 0058 19       		.uleb128 0x19
+ 2236 0059 00       		.byte	0
+ 2237 005a 00       		.byte	0
+ 2238 005b 07       		.uleb128 0x7
+ 2239 005c 2E       		.uleb128 0x2e
+ 2240 005d 01       		.byte	0x1
+ 2241 005e 3F       		.uleb128 0x3f
+ 2242 005f 19       		.uleb128 0x19
+ 2243 0060 03       		.uleb128 0x3
+ 2244 0061 0E       		.uleb128 0xe
+ 2245 0062 3A       		.uleb128 0x3a
+ 2246 0063 0B       		.uleb128 0xb
+ 2247 0064 3B       		.uleb128 0x3b
+ 2248 0065 0B       		.uleb128 0xb
+ 2249 0066 27       		.uleb128 0x27
+ 2250 0067 19       		.uleb128 0x19
+ 2251 0068 11       		.uleb128 0x11
+ 2252 0069 01       		.uleb128 0x1
+ 2253 006a 12       		.uleb128 0x12
+ 2254 006b 06       		.uleb128 0x6
+ 2255 006c 40       		.uleb128 0x40
+ 2256 006d 18       		.uleb128 0x18
+ 2257 006e 9742     		.uleb128 0x2117
+ 2258 0070 19       		.uleb128 0x19
+ 2259 0071 01       		.uleb128 0x1
+ 2260 0072 13       		.uleb128 0x13
+ 2261 0073 00       		.byte	0
+ 2262 0074 00       		.byte	0
+ 2263 0075 08       		.uleb128 0x8
+ 2264 0076 898201   		.uleb128 0x4109
+ 2265 0079 00       		.byte	0
+ 2266 007a 11       		.uleb128 0x11
+ 2267 007b 01       		.uleb128 0x1
+ 2268 007c 31       		.uleb128 0x31
+ 2269 007d 13       		.uleb128 0x13
+ 2270 007e 00       		.byte	0
+ 2271 007f 00       		.byte	0
+ 2272 0080 09       		.uleb128 0x9
+ 2273 0081 898201   		.uleb128 0x4109
+ 2274 0084 01       		.byte	0x1
+ 2275 0085 11       		.uleb128 0x11
+ 2276 0086 01       		.uleb128 0x1
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 47
+
+
+ 2277 0087 31       		.uleb128 0x31
+ 2278 0088 13       		.uleb128 0x13
+ 2279 0089 00       		.byte	0
+ 2280 008a 00       		.byte	0
+ 2281 008b 0A       		.uleb128 0xa
+ 2282 008c 8A8201   		.uleb128 0x410a
+ 2283 008f 00       		.byte	0
+ 2284 0090 02       		.uleb128 0x2
+ 2285 0091 18       		.uleb128 0x18
+ 2286 0092 9142     		.uleb128 0x2111
+ 2287 0094 18       		.uleb128 0x18
+ 2288 0095 00       		.byte	0
+ 2289 0096 00       		.byte	0
+ 2290 0097 0B       		.uleb128 0xb
+ 2291 0098 2E       		.uleb128 0x2e
+ 2292 0099 01       		.byte	0x1
+ 2293 009a 3F       		.uleb128 0x3f
+ 2294 009b 19       		.uleb128 0x19
+ 2295 009c 03       		.uleb128 0x3
+ 2296 009d 0E       		.uleb128 0xe
+ 2297 009e 3A       		.uleb128 0x3a
+ 2298 009f 0B       		.uleb128 0xb
+ 2299 00a0 3B       		.uleb128 0x3b
+ 2300 00a1 0B       		.uleb128 0xb
+ 2301 00a2 27       		.uleb128 0x27
+ 2302 00a3 19       		.uleb128 0x19
+ 2303 00a4 49       		.uleb128 0x49
+ 2304 00a5 13       		.uleb128 0x13
+ 2305 00a6 8701     		.uleb128 0x87
+ 2306 00a8 19       		.uleb128 0x19
+ 2307 00a9 11       		.uleb128 0x11
+ 2308 00aa 01       		.uleb128 0x1
+ 2309 00ab 12       		.uleb128 0x12
+ 2310 00ac 06       		.uleb128 0x6
+ 2311 00ad 40       		.uleb128 0x40
+ 2312 00ae 18       		.uleb128 0x18
+ 2313 00af 9742     		.uleb128 0x2117
+ 2314 00b1 19       		.uleb128 0x19
+ 2315 00b2 01       		.uleb128 0x1
+ 2316 00b3 13       		.uleb128 0x13
+ 2317 00b4 00       		.byte	0
+ 2318 00b5 00       		.byte	0
+ 2319 00b6 0C       		.uleb128 0xc
+ 2320 00b7 898201   		.uleb128 0x4109
+ 2321 00ba 01       		.byte	0x1
+ 2322 00bb 11       		.uleb128 0x11
+ 2323 00bc 01       		.uleb128 0x1
+ 2324 00bd 31       		.uleb128 0x31
+ 2325 00be 13       		.uleb128 0x13
+ 2326 00bf 01       		.uleb128 0x1
+ 2327 00c0 13       		.uleb128 0x13
+ 2328 00c1 00       		.byte	0
+ 2329 00c2 00       		.byte	0
+ 2330 00c3 0D       		.uleb128 0xd
+ 2331 00c4 34       		.uleb128 0x34
+ 2332 00c5 00       		.byte	0
+ 2333 00c6 03       		.uleb128 0x3
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 48
+
+
+ 2334 00c7 0E       		.uleb128 0xe
+ 2335 00c8 3A       		.uleb128 0x3a
+ 2336 00c9 0B       		.uleb128 0xb
+ 2337 00ca 3B       		.uleb128 0x3b
+ 2338 00cb 05       		.uleb128 0x5
+ 2339 00cc 49       		.uleb128 0x49
+ 2340 00cd 13       		.uleb128 0x13
+ 2341 00ce 3F       		.uleb128 0x3f
+ 2342 00cf 19       		.uleb128 0x19
+ 2343 00d0 3C       		.uleb128 0x3c
+ 2344 00d1 19       		.uleb128 0x19
+ 2345 00d2 00       		.byte	0
+ 2346 00d3 00       		.byte	0
+ 2347 00d4 0E       		.uleb128 0xe
+ 2348 00d5 35       		.uleb128 0x35
+ 2349 00d6 00       		.byte	0
+ 2350 00d7 49       		.uleb128 0x49
+ 2351 00d8 13       		.uleb128 0x13
+ 2352 00d9 00       		.byte	0
+ 2353 00da 00       		.byte	0
+ 2354 00db 0F       		.uleb128 0xf
+ 2355 00dc 34       		.uleb128 0x34
+ 2356 00dd 00       		.byte	0
+ 2357 00de 03       		.uleb128 0x3
+ 2358 00df 0E       		.uleb128 0xe
+ 2359 00e0 3A       		.uleb128 0x3a
+ 2360 00e1 0B       		.uleb128 0xb
+ 2361 00e2 3B       		.uleb128 0x3b
+ 2362 00e3 0B       		.uleb128 0xb
+ 2363 00e4 49       		.uleb128 0x49
+ 2364 00e5 13       		.uleb128 0x13
+ 2365 00e6 3F       		.uleb128 0x3f
+ 2366 00e7 19       		.uleb128 0x19
+ 2367 00e8 02       		.uleb128 0x2
+ 2368 00e9 18       		.uleb128 0x18
+ 2369 00ea 00       		.byte	0
+ 2370 00eb 00       		.byte	0
+ 2371 00ec 10       		.uleb128 0x10
+ 2372 00ed 2E       		.uleb128 0x2e
+ 2373 00ee 00       		.byte	0
+ 2374 00ef 3F       		.uleb128 0x3f
+ 2375 00f0 19       		.uleb128 0x19
+ 2376 00f1 3C       		.uleb128 0x3c
+ 2377 00f2 19       		.uleb128 0x19
+ 2378 00f3 6E       		.uleb128 0x6e
+ 2379 00f4 0E       		.uleb128 0xe
+ 2380 00f5 03       		.uleb128 0x3
+ 2381 00f6 0E       		.uleb128 0xe
+ 2382 00f7 3A       		.uleb128 0x3a
+ 2383 00f8 0B       		.uleb128 0xb
+ 2384 00f9 3B       		.uleb128 0x3b
+ 2385 00fa 0B       		.uleb128 0xb
+ 2386 00fb 00       		.byte	0
+ 2387 00fc 00       		.byte	0
+ 2388 00fd 00       		.byte	0
+ 2389              		.section	.debug_aranges,"",%progbits
+ 2390 0000 44000000 		.4byte	0x44
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 49
+
+
+ 2391 0004 0200     		.2byte	0x2
+ 2392 0006 00000000 		.4byte	.Ldebug_info0
+ 2393 000a 04       		.byte	0x4
+ 2394 000b 00       		.byte	0
+ 2395 000c 0000     		.2byte	0
+ 2396 000e 0000     		.2byte	0
+ 2397 0010 00000000 		.4byte	.LFB65
+ 2398 0014 24000000 		.4byte	.LFE65-.LFB65
+ 2399 0018 00000000 		.4byte	.LFB64
+ 2400 001c 7C000000 		.4byte	.LFE64-.LFB64
+ 2401 0020 00000000 		.4byte	.LFB66
+ 2402 0024 20000000 		.4byte	.LFE66-.LFB66
+ 2403 0028 00000000 		.4byte	.LFB67
+ 2404 002c 24000000 		.4byte	.LFE67-.LFB67
+ 2405 0030 00000000 		.4byte	.LFB68
+ 2406 0034 44000000 		.4byte	.LFE68-.LFB68
+ 2407 0038 00000000 		.4byte	.LFB63
+ 2408 003c 14040000 		.4byte	.LFE63-.LFB63
+ 2409 0040 00000000 		.4byte	0
+ 2410 0044 00000000 		.4byte	0
+ 2411              		.section	.debug_ranges,"",%progbits
+ 2412              	.Ldebug_ranges0:
+ 2413 0000 00000000 		.4byte	.LFB65
+ 2414 0004 24000000 		.4byte	.LFE65
+ 2415 0008 00000000 		.4byte	.LFB64
+ 2416 000c 7C000000 		.4byte	.LFE64
+ 2417 0010 00000000 		.4byte	.LFB66
+ 2418 0014 20000000 		.4byte	.LFE66
+ 2419 0018 00000000 		.4byte	.LFB67
+ 2420 001c 24000000 		.4byte	.LFE67
+ 2421 0020 00000000 		.4byte	.LFB68
+ 2422 0024 44000000 		.4byte	.LFE68
+ 2423 0028 00000000 		.4byte	.LFB63
+ 2424 002c 14040000 		.4byte	.LFE63
+ 2425 0030 00000000 		.4byte	0
+ 2426 0034 00000000 		.4byte	0
+ 2427              		.section	.debug_line,"",%progbits
+ 2428              	.Ldebug_line0:
+ 2429 0000 FC020000 		.section	.debug_str,"MS",%progbits,1
+ 2429      0200DF01 
+ 2429      00000201 
+ 2429      FB0E0D00 
+ 2429      01010101 
+ 2430              	.LASF70:
+ 2431 0000 4144435F 		.ascii	"ADC_GetResult16\000"
+ 2431      47657452 
+ 2431      6573756C 
+ 2431      74313600 
+ 2432              	.LASF50:
+ 2433 0010 54696D65 		.ascii	"Timer_ReadStatusRegister\000"
+ 2433      725F5265 
+ 2433      61645374 
+ 2433      61747573 
+ 2433      52656769 
+ 2434              	.LASF33:
+ 2435 0029 62616E5F 		.ascii	"ban_M11\000"
+ 2435      4D313100 
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 50
+
+
+ 2436              	.LASF57:
+ 2437 0031 4C43445F 		.ascii	"LCD_WriteControl\000"
+ 2437      57726974 
+ 2437      65436F6E 
+ 2437      74726F6C 
+ 2437      00
+ 2438              	.LASF4:
+ 2439 0042 73686F72 		.ascii	"short int\000"
+ 2439      7420696E 
+ 2439      7400
+ 2440              	.LASF61:
+ 2441 004c 436F756E 		.ascii	"Counter_Start\000"
+ 2441      7465725F 
+ 2441      53746172 
+ 2441      7400
+ 2442              	.LASF26:
+ 2443 005a 56414C41 		.ascii	"VALADC\000"
+ 2443      444300
+ 2444              	.LASF23:
+ 2445 0061 4D656469 		.ascii	"Medicion_2\000"
+ 2445      63696F6E 
+ 2445      5F3200
+ 2446              	.LASF82:
+ 2447 006c 6D61696E 		.ascii	"main\000"
+ 2447      00
+ 2448              	.LASF46:
+ 2449 0071 6F766631 		.ascii	"ovf1\000"
+ 2449      00
+ 2450              	.LASF47:
+ 2451 0076 6F766632 		.ascii	"ovf2\000"
+ 2451      00
+ 2452              	.LASF12:
+ 2453 007b 75696E74 		.ascii	"uint16\000"
+ 2453      313600
+ 2454              	.LASF38:
+ 2455 0082 44697374 		.ascii	"Distancia\000"
+ 2455      616E6369 
+ 2455      6100
+ 2456              	.LASF15:
+ 2457 008c 696E7431 		.ascii	"int16\000"
+ 2457      3600
+ 2458              	.LASF11:
+ 2459 0092 75696E74 		.ascii	"uint8\000"
+ 2459      3800
+ 2460              	.LASF72:
+ 2461 0098 426F746F 		.ascii	"Boton1_isr_Enable\000"
+ 2461      6E315F69 
+ 2461      73725F45 
+ 2461      6E61626C 
+ 2461      6500
+ 2462              	.LASF39:
+ 2463 00aa 44697374 		.ascii	"Distancia1\000"
+ 2463      616E6369 
+ 2463      613100
+ 2464              	.LASF40:
+ 2465 00b5 44697374 		.ascii	"Distancia2\000"
+ 2465      616E6369 
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 51
+
+
+ 2465      613200
+ 2466              	.LASF56:
+ 2467 00c0 426F746F 		.ascii	"Boton1_isr_Disable\000"
+ 2467      6E315F69 
+ 2467      73725F44 
+ 2467      69736162 
+ 2467      6C6500
+ 2468              	.LASF43:
+ 2469 00d3 76616C6F 		.ascii	"valor1\000"
+ 2469      723100
+ 2470              	.LASF44:
+ 2471 00da 76616C6F 		.ascii	"valor2\000"
+ 2471      723200
+ 2472              	.LASF49:
+ 2473 00e1 636F6E74 		.ascii	"cont\000"
+ 2473      00
+ 2474              	.LASF16:
+ 2475 00e6 666C6F61 		.ascii	"float\000"
+ 2475      7400
+ 2476              	.LASF8:
+ 2477 00ec 6C6F6E67 		.ascii	"long long int\000"
+ 2477      206C6F6E 
+ 2477      6720696E 
+ 2477      7400
+ 2478              	.LASF0:
+ 2479 00fa 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 2479      206C6F6E 
+ 2479      6720756E 
+ 2479      7369676E 
+ 2479      65642069 
+ 2480              	.LASF14:
+ 2481 0111 696E7438 		.ascii	"int8\000"
+ 2481      00
+ 2482              	.LASF34:
+ 2483 0116 62616E5F 		.ascii	"ban_M22\000"
+ 2483      4D323200 
+ 2484              	.LASF22:
+ 2485 011e 4D656469 		.ascii	"Medicion_1\000"
+ 2485      63696F6E 
+ 2485      5F3100
+ 2486              	.LASF58:
+ 2487 0129 4144435F 		.ascii	"ADC_Start\000"
+ 2487      53746172 
+ 2487      7400
+ 2488              	.LASF6:
+ 2489 0133 6C6F6E67 		.ascii	"long int\000"
+ 2489      20696E74 
+ 2489      00
+ 2490              	.LASF55:
+ 2491 013c 50696E5F 		.ascii	"Pin_Write\000"
+ 2491      57726974 
+ 2491      6500
+ 2492              	.LASF52:
+ 2493 0146 54696D65 		.ascii	"Timer_Stop\000"
+ 2493      725F5374 
+ 2493      6F7000
+ 2494              	.LASF67:
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 52
+
+
+ 2495 0151 4F70616D 		.ascii	"Opamp_Start\000"
+ 2495      705F5374 
+ 2495      61727400 
+ 2496              	.LASF63:
+ 2497 015d 436F6E74 		.ascii	"Contador_isr_StartEx\000"
+ 2497      61646F72 
+ 2497      5F697372 
+ 2497      5F537461 
+ 2497      72744578 
+ 2498              	.LASF59:
+ 2499 0172 4C43445F 		.ascii	"LCD_Start\000"
+ 2499      53746172 
+ 2499      7400
+ 2500              	.LASF19:
+ 2501 017c 6C6F6E67 		.ascii	"long double\000"
+ 2501      20646F75 
+ 2501      626C6500 
+ 2502              	.LASF3:
+ 2503 0188 756E7369 		.ascii	"unsigned char\000"
+ 2503      676E6564 
+ 2503      20636861 
+ 2503      7200
+ 2504              	.LASF69:
+ 2505 0196 4144435F 		.ascii	"ADC_IsEndConversion\000"
+ 2505      4973456E 
+ 2505      64436F6E 
+ 2505      76657273 
+ 2505      696F6E00 
+ 2506              	.LASF48:
+ 2507 01aa 4369636C 		.ascii	"CiclosDureza\000"
+ 2507      6F734475 
+ 2507      72657A61 
+ 2507      00
+ 2508              	.LASF53:
+ 2509 01b7 426F746F 		.ascii	"Boton2_isr_Enable\000"
+ 2509      6E325F69 
+ 2509      73725F45 
+ 2509      6E61626C 
+ 2509      6500
+ 2510              	.LASF29:
+ 2511 01c9 436F756E 		.ascii	"Count_M1\000"
+ 2511      745F4D31 
+ 2511      00
+ 2512              	.LASF30:
+ 2513 01d2 436F756E 		.ascii	"Count_M2\000"
+ 2513      745F4D32 
+ 2513      00
+ 2514              	.LASF2:
+ 2515 01db 7369676E 		.ascii	"signed char\000"
+ 2515      65642063 
+ 2515      68617200 
+ 2516              	.LASF64:
+ 2517 01e7 426F746F 		.ascii	"Boton1_isr_StartEx\000"
+ 2517      6E315F69 
+ 2517      73725F53 
+ 2517      74617274 
+ 2517      457800
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 53
+
+
+ 2518              	.LASF1:
+ 2519 01fa 756E7369 		.ascii	"unsigned int\000"
+ 2519      676E6564 
+ 2519      20696E74 
+ 2519      00
+ 2520              	.LASF74:
+ 2521 0207 4C43445F 		.ascii	"LCD_PrintString\000"
+ 2521      5072696E 
+ 2521      74537472 
+ 2521      696E6700 
+ 2522              	.LASF66:
+ 2523 0217 426F746F 		.ascii	"Boton2_isr_Disable\000"
+ 2523      6E325F69 
+ 2523      73725F44 
+ 2523      69736162 
+ 2523      6C6500
+ 2524              	.LASF21:
+ 2525 022a 4953525F 		.ascii	"ISR_Timer\000"
+ 2525      54696D65 
+ 2525      7200
+ 2526              	.LASF62:
+ 2527 0234 54696D65 		.ascii	"Timer_isr_StartEx\000"
+ 2527      725F6973 
+ 2527      725F5374 
+ 2527      61727445 
+ 2527      7800
+ 2528              	.LASF5:
+ 2529 0246 73686F72 		.ascii	"short unsigned int\000"
+ 2529      7420756E 
+ 2529      7369676E 
+ 2529      65642069 
+ 2529      6E7400
+ 2530              	.LASF28:
+ 2531 0259 73746174 		.ascii	"status\000"
+ 2531      757300
+ 2532              	.LASF78:
+ 2533 0260 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 2533      43313120 
+ 2533      352E342E 
+ 2533      31203230 
+ 2533      31363036 
+ 2534 0293 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m3 -mthumb -g -O"
+ 2534      20726576 
+ 2534      6973696F 
+ 2534      6E203233 
+ 2534      37373135 
+ 2535 02c6 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 2535      66756E63 
+ 2535      74696F6E 
+ 2535      2D736563 
+ 2535      74696F6E 
+ 2536              	.LASF75:
+ 2537 02ee 4C43445F 		.ascii	"LCD_PrintU32Number\000"
+ 2537      5072696E 
+ 2537      74553332 
+ 2537      4E756D62 
+ 2537      657200
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 54
+
+
+ 2538              	.LASF18:
+ 2539 0301 63686172 		.ascii	"char\000"
+ 2539      00
+ 2540              	.LASF24:
+ 2541 0306 5265696E 		.ascii	"Reinit\000"
+ 2541      697400
+ 2542              	.LASF10:
+ 2543 030d 696E7433 		.ascii	"int32_t\000"
+ 2543      325F7400 
+ 2544              	.LASF35:
+ 2545 0315 62616E5F 		.ascii	"ban_trig1\000"
+ 2545      74726967 
+ 2545      3100
+ 2546              	.LASF42:
+ 2547 031f 43616C63 		.ascii	"Calculos\000"
+ 2547      756C6F73 
+ 2547      00
+ 2548              	.LASF80:
+ 2549 0328 443A5C4D 		.ascii	"D:\\Mis documentos\\Documents\\Sensores\\Practica_8"
+ 2549      69732064 
+ 2549      6F63756D 
+ 2549      656E746F 
+ 2549      735C446F 
+ 2550 0357 5C507261 		.ascii	"\\Practica_8.cydsn\000"
+ 2550      63746963 
+ 2550      615F382E 
+ 2550      63796473 
+ 2550      6E00
+ 2551              	.LASF13:
+ 2552 0369 75696E74 		.ascii	"uint32\000"
+ 2552      333200
+ 2553              	.LASF79:
+ 2554 0370 6D61696E 		.ascii	"main.c\000"
+ 2554      2E6300
+ 2555              	.LASF7:
+ 2556 0377 6C6F6E67 		.ascii	"long unsigned int\000"
+ 2556      20756E73 
+ 2556      69676E65 
+ 2556      6420696E 
+ 2556      7400
+ 2557              	.LASF17:
+ 2558 0389 646F7562 		.ascii	"double\000"
+ 2558      6C6500
+ 2559              	.LASF36:
+ 2560 0390 62616E5F 		.ascii	"ban_trig2\000"
+ 2560      74726967 
+ 2560      3200
+ 2561              	.LASF76:
+ 2562 039a 4C43445F 		.ascii	"LCD_PutChar\000"
+ 2562      50757443 
+ 2562      68617200 
+ 2563              	.LASF25:
+ 2564 03a6 49544D5F 		.ascii	"ITM_RxBuffer\000"
+ 2564      52784275 
+ 2564      66666572 
+ 2564      00
+ 2565              	.LASF65:
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 55
+
+
+ 2566 03b3 426F746F 		.ascii	"Boton2_isr_StartEx\000"
+ 2566      6E325F69 
+ 2566      73725F53 
+ 2566      74617274 
+ 2566      457800
+ 2567              	.LASF60:
+ 2568 03c6 54696D65 		.ascii	"Timer_Start\000"
+ 2568      725F5374 
+ 2568      61727400 
+ 2569              	.LASF9:
+ 2570 03d2 5F5F696E 		.ascii	"__int32_t\000"
+ 2570      7433325F 
+ 2570      7400
+ 2571              	.LASF71:
+ 2572 03dc 50574D5F 		.ascii	"PWM_Sleep\000"
+ 2572      536C6565 
+ 2572      7000
+ 2573              	.LASF54:
+ 2574 03e6 50574D5F 		.ascii	"PWM_Start\000"
+ 2574      53746172 
+ 2574      7400
+ 2575              	.LASF51:
+ 2576 03f0 54696D65 		.ascii	"Timer_ReadCapture\000"
+ 2576      725F5265 
+ 2576      61644361 
+ 2576      70747572 
+ 2576      6500
+ 2577              	.LASF20:
+ 2578 0402 73697A65 		.ascii	"sizetype\000"
+ 2578      74797065 
+ 2578      00
+ 2579              	.LASF73:
+ 2580 040b 4C43445F 		.ascii	"LCD_Position\000"
+ 2580      506F7369 
+ 2580      74696F6E 
+ 2580      00
+ 2581              	.LASF27:
+ 2582 0418 54656D70 		.ascii	"Temperatura\000"
+ 2582      65726174 
+ 2582      75726100 
+ 2583              	.LASF68:
+ 2584 0424 4144435F 		.ascii	"ADC_StartConvert\000"
+ 2584      53746172 
+ 2584      74436F6E 
+ 2584      76657274 
+ 2584      00
+ 2585              	.LASF37:
+ 2586 0435 56656C6F 		.ascii	"Velocidad\000"
+ 2586      63696461 
+ 2586      6400
+ 2587              	.LASF41:
+ 2588 043f 44697374 		.ascii	"Distancia3\000"
+ 2588      616E6369 
+ 2588      613300
+ 2589              	.LASF31:
+ 2590 044a 62616E5F 		.ascii	"ban_M1\000"
+ 2590      4D3100
+ARM GAS  C:\Users\Usuario\AppData\Local\Temp\ccwOwhII.s 			page 56
+
+
+ 2591              	.LASF32:
+ 2592 0451 62616E5F 		.ascii	"ban_M2\000"
+ 2592      4D3200
+ 2593              	.LASF77:
+ 2594 0458 43794465 		.ascii	"CyDelay\000"
+ 2594      6C617900 
+ 2595              	.LASF45:
+ 2596 0460 76616C6F 		.ascii	"valor3\000"
+ 2596      723300
+ 2597              	.LASF81:
+ 2598 0467 436F6E74 		.ascii	"Contador\000"
+ 2598      61646F72 
+ 2598      00
+ 2599              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

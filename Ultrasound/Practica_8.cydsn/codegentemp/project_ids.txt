@@ -1,0 +1,6 @@
+D:\Mis documentos\Documents\Sensores\Practica_8\Practica_8.cydsn\Practica_8.cyprj|23e4de27-3989-4e95-ac76-8e51d0bddbdf
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\default\CyAnnotationLibrary\CyAnnotationLibrary.cylib\CyAnnotationLibrary.cyprj|e9472fa3-13fd-486a-868d-efdf6bedb764
+C:\Users\Usuario\Documents\PSoC Creator\4.4\Downloads ( 4.4).cylib\Downloads ( 4.4).cyprj|e15beb56-47cd-4f2b-819e-b9a8ac5d8753
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cycomponentlibraryupdates\CyComponentLibraryUpdates.cylib\CyComponentLibraryUpdates.cyprj|f8626042-c6aa-42d0-9370-9303ba76353a
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cycomponentlibrary\CyComponentLibrary.cylib\CyComponentLibrary.cyprj|aa024444-1d10-4b3a-aba1-2f920043d6f6
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cyprimitives\CyPrimitives.cylib\CyPrimitives.cyprj|2b74407b-bcd7-4c5c-8509-7518c7e115f9

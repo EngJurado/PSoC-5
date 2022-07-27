@@ -1,0 +1,6 @@
+C:\Users\laura\OneDrive\Documents\SEMESTRE 2021-1\SENSORES\Practica_2\Practica_2\Practica_2.cydsn\Practica_2.cyprj|2fe15019-785c-48dc-a70d-f649ee472062
+C:\Program Files (x86)\Cypress\PSoC Creator\4.3\PSoC Creator\psoc\content\default\CyAnnotationLibrary\CyAnnotationLibrary.cylib\CyAnnotationLibrary.cyprj|dbb614d4-a4e8-45fa-b18f-7b1d32e441db
+C:\Users\laura\OneDrive\Documents\PSoC Creator\4.3\Downloads ( 4.3).cylib\Downloads ( 4.3).cyprj|1d525bc7-acc7-45de-9559-5683e9287fba
+C:\Program Files (x86)\Cypress\PSoC Creator\4.3\PSoC Creator\psoc\content\cycomponentlibraryupdates\CyComponentLibraryUpdates.cylib\CyComponentLibraryUpdates.cyprj|250fdf64-79a8-42d2-8a7b-f007fdf80f29
+C:\Program Files (x86)\Cypress\PSoC Creator\4.3\PSoC Creator\psoc\content\cycomponentlibrary\CyComponentLibrary.cylib\CyComponentLibrary.cyprj|570c697a-1dfd-475b-9be6-67828ff16a95
+C:\Program Files (x86)\Cypress\PSoC Creator\4.3\PSoC Creator\psoc\content\cyprimitives\CyPrimitives.cylib\CyPrimitives.cyprj|78455148-8980-45bf-b441-d62218927412

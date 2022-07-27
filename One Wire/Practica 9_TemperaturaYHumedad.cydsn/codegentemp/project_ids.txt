@@ -1,0 +1,7 @@
+C:\Users\laura\Downloads\Practica 9\Practica 9\Practica 9\Practica 9_TemperaturaYHumedad.cydsn\Practica 9_TemperaturaYHumedad.cyprj|beb185cf-dfcc-4633-a14b-b95bbc0b4ec3
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\default\CyAnnotationLibrary\CyAnnotationLibrary.cylib\CyAnnotationLibrary.cyprj|91585c07-98dc-4c29-aadf-66ba06bdcc12
+C:\Users\laura\OneDrive\Documents\PSoC Creator\4.4\Downloads ( 4.4).cylib\Downloads ( 4.4).cyprj|c21d2ea0-2699-4795-9fbc-b2335c9d3a2d
+C:\Users\laura\OneDrive\Documents\PSoC Creator\4.3\Downloads ( 4.3).cylib\Downloads ( 4.3).cyprj|e42a0433-f199-4598-8b82-40ee3c178541
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cycomponentlibraryupdates\CyComponentLibraryUpdates.cylib\CyComponentLibraryUpdates.cyprj|f9e48e08-8117-4bda-9221-0d91ffd2e789
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cycomponentlibrary\CyComponentLibrary.cylib\CyComponentLibrary.cyprj|bf75cb71-9aac-4b32-9ce6-d6bf6b8ec495
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cyprimitives\CyPrimitives.cylib\CyPrimitives.cyprj|050a2392-43b7-40e4-a3ce-abd5c01e992e
